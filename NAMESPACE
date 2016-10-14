@@ -1,0 +1,6 @@
+exportPattern("^[[:alpha:]]+")
+import(nlme)
+import(stats)
+import(utils)
+import(graphics)
+S3method(print,sc)
