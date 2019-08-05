@@ -1,265 +1,166 @@
+#' Piecewise linear model / piecewise regression
+#' 
+#' The \code{plm} function computes a piecewise regression model (see Huitema &
+#' McKean, 2000).
+#' 
+#' 
+#' @inheritParams .inheritParams
+#' @param AR Maximal lag of autoregression. Modeled based on the
+#' Autoregressive-Moving Average (ARMA) function.  When AR is set, the family
+#' argument must be set to \code{family = "gaussian"}.
+#' @param family Set the distributioin family. Defaults to a gaussian
+#' distribution. See the \code{family} function for more details.
+#' @param formula Defaults to the standard piecewise regression model. The
+#' parameter phase followed by the phase name (e.g., phaseB) indicates the level effect of the corresponding phase. The parameter 'inter' followed by the phase name (e.g., interB) adresses the slope effect based on the method
+#' provide in the model argument (e.g., "B&L-B"). The formula can be changed
+#' for example to include further variables into the regression model.
+#' @param update An easier way to change the regression formula (e.g., . ~ . + newvariable).
+#' @param na.action Defines how to deal with missing values
+#' @param ... Further arguments passed to the glm function.
+#' @return 
+#' \item{formula}{plm formula. Uselful if you want to use the update or formula argument and you don't know the names of the parameters.}
+#' \item{model}{Character string from function call (see \code{Arguments} above).} 
+#' \item{F.test}{F-test values of modelfit.}
+#' \item{r.squares}{Explained variance R squared for each model parameter.}
+#' \item{ar}{Autoregression lag from function call (see \code{Arguments} above).}
+#' \item{family}{Distribution family from function call (see \code{Arguments} above).}
+#' \item{full.model}{Full regression model list from the gls or glm function.}
+#' @author Juergen Wilbert
+#' @family regression functions
+#' @references Beretvas, S., & Chung, H. (2008). An evaluation of modified
+#' R2-change effect size indices for single-subject experimental designs.
+#' \emph{Evidence-Based Communication Assessment and Intervention, 2}, 120-128.
+#' 
+#' Huitema, B. E., & McKean, J. W. (2000). Design specification issues in
+#' time-series intervention models. \emph{Educational and Psychological
+#' Measurement, 60}, 38-58.
+#' @examples
+#' 
+#' ## Compute a piecewise regression model for a random single-case
+#' set.seed(123)
+#' AB <- design_rSC(
+#'   phase.design = list(A = 10, B = 20), 
+#'   level = list(A = 0, B = 1), slope = list(A = 0, B = 0.05), 
+#'   trend = list(0.05)
+#' )
+#' dat <- rSC(design = AB)
+#' plm(dat, AR = 3)
+#' 
+#' ## Another example with a more complex design
+#' A1B1A2B2 <- design_rSC(
+#'   phase.design = list(A1 = 15, B1 = 20, A2 = 15, B2 = 20), 
+#'   level = list(A1 = 0, B1 = 1, A2 = -1, B2 = 1),
+#'   slope = list(A1 = 0, B1 = 0.0, A1 = 0, B2 = 0.0),
+#'   trend = list(0.0))
+#' dat <- rSC(design = A1B1A2B2, seed = 123)
+#' plm(dat, model = "JW")
+#' 
+#' ## no slope effects were found. Therefore you might want to drop slope estimation:
+#' plm(dat, slope = FALSE, model = "JW")
+#' 
+#' ## and now drop the trend estimation as well
+#' plm(dat, slope = FALSE, trend = FALSE, model = "JW")
+#' 
+#' @export
+plm <- function(data, dvar, pvar, mvar, AR = 0, model = "B&L-B", family = "gaussian", trend = TRUE, level = TRUE, slope = TRUE,formula = NULL, update = NULL, na.action = na.omit, ...) {
 
-
-plm <- function(data, AR = NULL, model = "B&L-B", count.data = FALSE, family = ifelse(count.data, "poisson", "gaussian"),...) {
+  if (AR > 0 && !family == "gaussian") {
+    stop("Autoregression models could only be applied if distribution familiy = 'gaussian'.\n")
+  }
   
-  data <- .SCprepareData(data)
+  # set attributes to arguments else set to defaults of scdf
+  if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv) else scdf_attr(data, .opt$dv) <- dvar
+  if (missing(pvar)) pvar <- scdf_attr(data, .opt$phase) else scdf_attr(data, .opt$phase) <- pvar
+  if (missing(mvar)) mvar <- scdf_attr(data, .opt$mt) else scdf_attr(data, .opt$mt) <- mvar
+  
+  data <- .SCprepareData(data, na.rm = TRUE)
+  
+  ATTRIBUTES <- attributes(data)[[.opt$scdf]]
   
   N <- length(data)
-  
-  if(N == 1)
-    data <- data[[1]]
-  
-  if(N > 1)
-    stop("Procedure could not be applied for more than one case.\nConsider to use the hplm function.")
-  
-  
-  if (!is.null(AR)) {
-    return(.plm.ar(data = data, AR = AR, model = model))
+  if(N > 1) {
+    stop("Procedure could not be applied to more than one case.\n
+         Consider to use the hplm function.")
   }
-  
-  
-  #### to do multiple baseline
-  
-  data <- na.omit(data)
-  
-  ### model definition
-  y <- data[,2]
-  n1 <- sum(data[,1] == "A")
-  n2 <- sum(data[,1] == "B")
-  
-  if(model == "H-M") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D	
-  } else if (model == "B&L-B") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1])*D	
-  } else if (model == "Mohr#1") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D	
-  } else if (model == "Mohr#2") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D
-    MT <- MT-MT[n1+1]
-  } else if (model == "Manly") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D
-  } else stop("Wrong model definition!\n")
-  
-  if(family == "nbinomial") {
-    #	library(MASS)
-    #	full <- glm.nb(y ~ 1 + MT + D + inter)
-    #	lr1 <- glm.nb(y ~ 1 + MT + D)
-    #	lr2 <- glm.nb(y ~ 1 + MT + inter)
-    #	lr3 <- glm.nb(y ~ 1 + D + inter)
-  } else {
-    full <- glm(y ~ 1 + MT + D + inter, family = family,...)
-    lr1 <- glm(y ~ 1 + MT + D, family = family,...)
-    lr2 <- glm(y ~ 1 + MT + inter, family = family,...)
-    lr3 <- glm(y ~ 1 + D + inter, family = family,...)
-  }
-  
-  full.I <- full$coefficients[[1]]
-  full.T <- full$coefficients[[2]]
-  full.D <- full$coefficients[[3]]
-  full.TxD <- full$coefficients[[4]]
-  
-  ### inference
-  df2.full <- full$df.residual
-  QSE <- sum(full$residuals^2, na.rm = TRUE)
-  QST <- sum((y-mean(y))^2, na.rm = TRUE)
-  MQSA <- (QST - QSE) / 3
-  MQSE <- QSE / df2.full
-  F.full <- MQSA / MQSE
-  p.full <- pf(F.full,3,df2.full, lower.tail = FALSE)
-  r2.full <- 1 - (QSE / QST)
-  r2.full.adj <- r2.full-(1-r2.full)*(3/(length(y)-3-1))
-  
-  r2.full <- 1-(var(full$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr1 <- 1-(var(lr1$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr2 <- 1-(var(lr2$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr3 <- 1-(var(lr3$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  
-  test.slope <- anova(lr1, full)
-  p.slope <- test.slope$"Pr(>F)"[2]
-  F.slope <- test.slope$F[2]
-  ES.slope <- r2.full-r2.lr1
-  
-  test.level <- anova(lr2, full)
-  p.level <- test.level$"Pr(>F)"[2]
-  F.level <- test.level$F[2]
-  ES.level <- r2.full-r2.lr2
-  
-  test.trend <- anova(lr3, full)
-  p.trend <- test.trend$"Pr(>F)"[2]
-  F.trend <- test.trend$F[2]
-  ES.trend <- r2.full-r2.lr3
-  
-  ### output
-  out <- list(model = model, F = F.full, df1 = 3, df2 = df2.full, p = p.full, R2 = r2.full, R2.adj = r2.full.adj, n1 = n1, n2 = n2, count.data = count.data, I = full.I, T = full.T, D = full.D, TxD = full.TxD, F.slope = F.slope, p.slope = p.slope, ES.slope = ES.slope, F.level = F.level, p.level = p.level, ES.level = ES.level, F.trend = F.trend, p.trend = p.trend, ES.trend = ES.trend, full.model = full, MT = MT, data = data, N = N, family = family)
-  class(out) <- c("sc", "pr")
-  out
-}
 
+# formula definition ------------------------------------------------------
+  
+  tmp_model <- .add_model_dummies(data = data, model = model)
+  data      <- tmp_model$data[[1]]
 
-.plm.ar <- function(data, AR = 2, model = "B&L-B") {
+  if(is.null(formula)) {
+      formula <- as.formula(.create_fixed_formula(
+        dvar, mvar, slope, level, trend, tmp_model$VAR_PHASE, tmp_model$VAR_INTER
+        ))
+  } 
   
-  data <- .SCprepareData(data)
+  if(!is.null(update)) formula <- update(formula, update)
   
-  #### to do multiple baseline
-  N <- length(data)
-  if(N > 1)
-    stop("Multiple single-cases are given. Calculatioins could only be applied to a single data set.\n")
+  PREDICTORS <- as.character(formula[3])
+  PREDICTORS <- unlist(strsplit(PREDICTORS, "\\+"))
+  PREDICTORS <- trimws(PREDICTORS)
+  if(!is.na(match("1", PREDICTORS)))
+     PREDICTORS <- PREDICTORS[-match("1", PREDICTORS)]
   
-  data <- data[[1]]
+  formula.full <- formula
+  formulas.ir  <- sapply(PREDICTORS, function(x) update(formula, formula(paste0(".~. - ", x))))
+
+# glm models --------------------------------------------------------------
   
-  ### extracting variables
-  y <- data[,2]
-  n1 <- sum(data[,1] == "A")
-  n2 <- sum(data[,1] == "B")
-  
-  ### descriptive
-  if(model == "H-M") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D	
-  } else if (model == "B&L-B") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1])*D	
-  } else if (model == "Mohr#1") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D	
-  } else if (model == "Mohr#2") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D
-    MT <- MT-MT[n1+1]
-  } else if (model == "Manly") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D
-  }	
-  
-  
-  if(AR > 0)
-    full <- gls(y ~ 1 + MT + D + inter, correlation=corARMA(p=AR), method="ML")
-  if(AR == 0)
-    full <- gls(y ~ 1 + MT + D + inter, method="ML")
-  
-  full.I <- full$coefficients[[1]]
-  full.T <- full$coefficients[[2]]
-  full.D <- full$coefficients[[3]]
-  full.TxD <- full$coefficients[[4]]
-  
-  ### inference
-  df2.full <- full$dims$N - full$dims$p
-  QSE <- sum(full$residuals^2, na.rm = TRUE)
-  QST <- sum((y-mean(y))^2, na.rm = TRUE)
-  MQSA <- (QST - QSE) / 3
-  MQSE <- QSE / df2.full
-  F.full <- MQSA / MQSE
-  p.full <- pf(F.full,3,df2.full, lower.tail = FALSE)
-  r2.full <- 1 - (QSE / QST)
-  r2.full.adj <- r2.full-(1-r2.full)*(3/(length(y)-3-1))
-  
-  if(AR > 0) {
-    lr1 <- gls(y ~ 1 + MT + D, correlation=corARMA(p=AR), method="ML")
-    lr2 <- gls(y ~ 1 + MT + inter, correlation=corARMA(p=AR), method="ML")
-    lr3 <- gls(y ~ 1 + D + inter, correlation=corARMA(p=AR), method="ML")
-  }
   if(AR == 0) {
-    lr1 <- gls(y ~ 1 + MT + D, method="ML")
-    lr2 <- gls(y ~ 1 + MT + inter, method="ML")
-    lr3 <- gls(y ~ 1 + D + inter, method="ML")
+    full <- glm(formula.full, data = data, family = family, na.action = na.action, ...)
+    restricted.models <- lapply(formulas.ir, function(x) glm(x, data = data, family = family, na.action = na.action, ...))
+    df2.full <- full$df.residual
+    df.int <- if (attr(full$terms, "intercept")) 1 else 0
   }
-  r2.full <- 1-(var(full$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr1 <- 1-(var(lr1$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr2 <- 1-(var(lr2$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
-  r2.lr3 <- 1-(var(lr3$residuals, na.rm = TRUE)/var(y, na.rm = TRUE))
+
+  if(AR > 0) {
+    full <- gls(formula.full, data = data, correlation = corARMA(p = AR), method = "ML", na.action = na.action)
+    restricted.models <- 
+      lapply(formulas.ir, function(x) 
+        gls(model = x, data = data, correlation = corARMA(p = AR), method = "ML", na.action = na.action)
+      )
+    df2.full <- full$dims$N - full$dims$p
+    df.int <- if ("(Intercept)" %in% names(full$parAssign)) 1 else 0
+  }
+
+# F and R-Squared ---------------------------------------------------------
+
+  n <- length(full$residuals)
+  df1.full <- n - 1 - df2.full
   
-  test.slope <- anova(lr1, full)
-  p.slope <- test.slope$"Pr(>F)"[2]
-  F.slope <- test.slope$F[2]
-  ES.slope <- r2.full-r2.lr1
+  QSE <- sum(full$residuals^2, na.rm = TRUE)
+  QST <- sum((data[, dvar] - mean(data[, dvar]))^2)
+  MQSA <- (QST - QSE) / df1.full
+  MQSE <- QSE / df2.full
+  F.full <- MQSA / MQSE
+  p.full <- pf(F.full, df1.full, df2.full, lower.tail = FALSE)
   
-  test.level <- anova(lr2, full)
-  p.level <- test.level$"Pr(>F)"[2]
-  F.level <- test.level$F[2]
-  ES.level <- r2.full-r2.lr2
+  total.variance <- var(data[, dvar])
+  r2.full     <- 1 - (var(full$residuals) / total.variance)
+  r2.full.adj <- 1 - (1 - r2.full) * ((n - df.int) / df2.full)
+
+  r.squares <- lapply(restricted.models, function(x) 
+    r2.full - (1 - (var(x$residuals, na.rm = TRUE) / total.variance))
+  )
+  r.squares <- unlist(r.squares)
   
-  test.trend <- anova(lr3, full)
-  p.trend <- test.trend$"Pr(>F)"[2]
-  F.trend <- test.trend$F[2]
-  ES.trend <- r2.full-r2.lr3
+# output ------------------------------------------------------------------
+
+  F.test <- c(
+    F = F.full, df1 = df1.full, df2 = df2.full, p = p.full, 
+    R2 = r2.full, R2.adj = r2.full.adj
+  )
   
-  ### output
-  out <- list(model = model, F = F.full, df1 = 3, df2 = df2.full, p = p.full, R2 = r2.full, R2.adj = r2.full.adj, n1 = n1, n2 = n2, I = full.I, T = full.T, D = full.D, TxD = full.TxD, F.slope = F.slope, p.slope = p.slope, ES.slope = ES.slope, F.level = F.level, p.level = p.level, ES.level = ES.level, F.trend = F.trend, p.trend = p.trend, ES.trend = ES.trend,full.model = full, MT = MT, data = data, ar = AR, N = N, count.data = FALSE, family = "gaussian")
-  class(out) <- c("sc", "plm.ar")
+  out <- list(
+    formula = formula.full, model = model, F.test = F.test, 
+    r.squares = r.squares, ar = AR, family = family, full.model = full, 
+    data = data
+  )
+
+  class(out) <- c("sc", "pr")
+  attr(out, .opt$phase)  <- ATTRIBUTES[.opt$phase]
+  attr(out, .opt$mt)     <- ATTRIBUTES[.opt$mt]
+  attr(out, .opt$dv)     <- ATTRIBUTES[.opt$dv]
   out
-}
-
-
-
-.plm.mt <- function(data, type = "level p", model = "B&L-B", count.data = FALSE) {
-  N <- length(data)
-  if(N > 1)
-    stop("Multiple single-cases are given. Calculatioins could only be applied to a single data set.\n")
-  
-  if(class(data)=="list")
-    data <- data[[1]]
-  if(ncol(data) < 3)
-    data[,3] <- 1:nrow(data)
-  
-  y <- data[,2]
-  n1 <- sum(data[,1] == "A")
-  n2 <- sum(data[,1] == "B")
-  
-  if(model == "H-M") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D	
-  } else if (model == "B&L-B") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1])*D	
-  } else if (model == "Mohr#1") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D	
-  } else if (model == "Mohr#2") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- (MT-MT[n1+1])*D
-    MT <- MT-MT[n1+1]
-  } else if (model == "Manly") {
-    MT <- data[,3]
-    D <- c(rep(0, n1), rep(1, n2))
-    inter <- MT*D
-  }	
-  
-  if(count.data) {
-    full <- glm(I(round(y)) ~ 1 + MT + D + inter, family = "poisson")
-  } else full <- lm(y ~ 1 + MT + D + inter)
-  
-  if (type == "1" || type == "level p")
-    return(summary(full)$coef[3,4])
-  if (type == "2" || type == "slope p")
-    return(summary(full)$coef[4,4])
-  if (type == "3" || type == "level t") 
-    return(summary(full)$coef[3,3])
-  if (type == "4" || type == "slope t")
-    return(summary(full)$coef[4,3])
-  if (type == "5" || type == "level B")
-    return(summary(full)$coef[3,1])
-  if (type == "6" || type == "slope B")
-    return(summary(full)$coef[4,1])
-  if (type == "model")
-    return(full)
-  
 }

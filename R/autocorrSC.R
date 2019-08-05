@@ -1,29 +1,65 @@
+#' Autocorrelation for single-case data
+#'
+#' The autocorrSC function calculates autocorrelations within each phase and
+#' across all phases.
+#'
+#' @inheritParams .inheritParams
+#' @param lag.max The lag up to which autocorrelations will be computed.
+#' Default is \code{lag.max = 3}.
+#' @param ... Further arguments passed to the \code{\link{acf}} function
+#' @return A data frame containing separate autocorrelations for each
+#' phase and for all phases (for each single-case). If \code{lag.max} exceeds
+#' the length of a phase minus one, NA is returned for this cell.
+#' @author Juergen Wilbert
+#' @seealso \code{\link{trendSC}}, \code{\link{plm}}, \code{\link{acf}}
+#' @examples
+#' ## Compute autocorrelations for a list of four single-cases up to lag 2.
+#' autocorrSC(Huber2014, lag.max = 2)
+#' @concept Autocorrelation
+#' @concept Serial correlation
+#' @export
 
-autocorrSC <- function(data, lag.max = 3) {
-  data.list <- .SCprepareData(data)
-  N <- length(data.list)
-  case.names <- names(data.list)
-  if (is.null(case.names))
-    case.names <- paste("Case",1:N, sep = "")
-  VAR <- paste0("lag_",1:lag.max)
-  ac <- data.frame(case = rep(case.names, each = 3), phase = rep(c("A","B","AB"), N))
-  ac[,VAR] <- NA
-  
-  for(i in (0:(N-1)*3)) {
-    data <- data.list[[(i/3+1)]]
-    A <- data[,2][data[,1] == "A"]
-    B <- data[,2][data[,1] == "B"]
-    if(length(A)-1 < lag.max) lagA <- length(A)-1 else lagA <- lag.max
-    if(length(B)-1 < lag.max) lagB <- length(B)-1 else lagB <- lag.max
-    if(length(c(A,B))-1 < lag.max) lagAB <- length(c(A,B))-1 else lagAB <- lag.max
-    
-    
-    ac[i+1,VAR[1:lagA]] <- acf(A, lag.max = lagA, plot = FALSE)$acf[-1]
-    ac[i+2,VAR[1:lagB]] <- acf(B, lag.max = lagB, plot = FALSE)$acf[-1]
-    ac[i+3,VAR[1:lagAB]] <- acf(c(A,B), lag.max = lagAB, plot = FALSE)$acf[-1]
-   }
+autocorrSC <- function(data, dvar, pvar, mvar, lag.max = 3, ...) {
+  if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv) else scdf_attr(data, .opt$dv) <- dvar
+  if (missing(pvar)) pvar <- scdf_attr(data, .opt$phase) else scdf_attr(data, .opt$phase) <- pvar
+  if (missing(mvar)) mvar <- scdf_attr(data, .opt$mt) else scdf_attr(data, .opt$mt) <- mvar
 
-  out <- list(autocorr = ac)
-  class(out) <- c("sc","autocorr")
+  data <- .SCprepareData(data)
+
+  N <- length(data)
+  case.names <- names(data)
+  if (is.null(case.names)) {
+    case.names <- paste("Case", 1:N, sep = "")
+  }
+  VAR <- paste0("lag_", 1:lag.max)
+
+  design <- rle(as.character(data[[1]][[pvar]]))$values
+
+  while (any(duplicated(design))) {
+    design[anyDuplicated(design)] <- paste0(design[anyDuplicated(design)], ".phase", anyDuplicated(design))
+  }
+
+
+  ac <- data.frame(case = rep(case.names, each = length(design) + 1), phase = rep(c(design, "all"), N))
+  ac[, VAR] <- NA
+
+
+  for (case in 1:N) {
+    phases <- .phasestructure(data[[case]], pvar = pvar)
+
+    for (phase in 1:length(design)) {
+      y <- data[[case]][phases$start[phase]:phases$stop[phase], dvar]
+      if (length(y) - 1 < lag.max) lag <- length(y) - 1 else lag <- lag.max
+
+      ac[(case - 1) * (length(design) + 1) + phase, VAR[1:lag]] <- acf(y, lag.max = lag, plot = FALSE, ...)$acf[-1]
+    }
+    y <- data[[case]][[dvar]]
+    if (length(y) - 1 < lag.max) lag <- length(y) - 1 else lag <- lag.max
+
+    ac[(case - 1) * (length(design) + 1) + (length(design) + 1), VAR[1:lag]] <- acf(y, lag.max = lag, plot = FALSE, ...)$acf[-1]
+  }
+
+  out <- list(autocorr = ac, dvar = dvar)
+  class(out) <- c("sc", "autocorr")
   out
 }
