@@ -3,10 +3,7 @@
   
   if (!is.null(attri)) out <- attri
   
-  out$class <- c("scdf","list")
-  #out[.opt$phase] <- "phase"
-  #out[.opt$dv]    <- "values"
-  #out[.opt$mt]    <- "mt"
+  out$class <- c("scdf", "list")
   
   scdf <- list()
   scdf[[.opt$phase]]   <- "phase"
@@ -17,6 +14,16 @@
   
   out
 }  
+
+.deprecated_warning <- function(new, old) {
+  if (isTRUE(getOption("scan.deprecated.warning"))) {
+    warning(
+      .opt$function_deprecated_warning, 
+      " Please name function '", new, "' instead of '", old, "'."
+    )
+  }   
+} 
+
 
 .SCmovingAverage <- function(x, xLag, FUN = mean) {
   for(i in (xLag + 1):(length(x) - xLag))
@@ -167,11 +174,11 @@
   x
 }
 
-.kendall <- function(x, y, continuity_correction = TRUE) {
+.kendall <- function(x, y, tau_method = "b", continuity_correction = TRUE) {
   
   out <- list()
   dat <- data.frame(cbind(x, y))
-  dat <- dat[order(dat$x), ]
+  dat <- dat[sort.list(dat$x), ]
   C <- 0
   D <- 0
   N <- nrow(dat)
@@ -192,26 +199,54 @@
   out$n0 <- n0
   out$ti <- ti
   out$ui <- ui
-  out$.C <- C
-  out$.D <- D
+  out$nC <- C
+  out$nD <- D
   out$S  <- S
-  out$tau   <- S / n0
-  out$tau.b <- S / sqrt( (n0 - ti) * (n0 - ui) )
-  out$D <- out$S / out$tau.b
-  v0 <- N * (N - 1) * (2 * N + 5)
-  vt <- sum(sapply(tie.x, function(x) (x * (x - 1)) * (2 * x + 5)))
-  vu <- sum(sapply(tie.y, function(x) (x * (x - 1)) * (2 * x + 5)))
-  v1 <- sum(sapply(tie.x, function(x) (x * (x - 1)))) * sum(sapply(tie.y, function(x) (x * (x - 1))))
-  v2 <- sum(sapply(tie.x, function(x) (x * (x - 1)) * (x - 2))) * sum(sapply(tie.y, function(x) (x * (x - 1)) * (x - 2)))
   
-  out$varS <- (v0 - vt - vu) / 18 + (v1 / (2 * N * (N - 1))) + 
-    (v2 / (9 * N * (N - 1) * (N - 2)))
+  if (tau_method == "a") {
+    out$D <- n0
+    out$tau   <- S / out$D
+    out$se <- sqrt((2 * N + 5) / choose(N, 2)) / 3
+    
+    #out$varS <- (2 * (2 * N + 5)) / (9 * N * (N - 1))
+    #out$sdS <- sqrt(out$varS)
+    
+    out$sdS <- out$S / (3 * out$S / sqrt( N * (N - 1) * (2* N + 5) / 2 ))
+    out$varS <- out$sdS^2
+    if (!continuity_correction) out$z <- 3 * out$S / sqrt( N * (N - 1) * (2* N + 5) / 2 )
+    if (continuity_correction)  out$z <- 3 * (out$S - 1) / sqrt( N * (N - 1) * (2* N + 5) / 2 ) 
+    
+  }
   
-  out$sdS <- sqrt(out$varS)
-  out$se  <- out$sdS / out$D
+  if (tau_method == "b") {
+    
+    out$D <- sqrt( (n0 - ti) * (n0 - ui) )
+    out$tau <- S / out$D
+    
+    v0 <- N * (N - 1) * (2 * N + 5)
+    vt <- sum(sapply(tie.x, function(x) (x * (x - 1)) * (2 * x + 5)))
+    vu <- sum(sapply(tie.y, function(x) (x * (x - 1)) * (2 * x + 5)))
+    v1 <- sum(sapply(tie.x, function(x) (x * (x - 1)))) * 
+          sum(sapply(tie.y, function(x) (x * (x - 1))))
+    v2 <- sum(sapply(tie.x, function(x) (x * (x - 1)) * (x - 2))) * 
+          sum(sapply(tie.y, function(x) (x * (x - 1)) * (x - 2)))
+    
+    out$varS <- (v0 - vt - vu) / 18 + 
+                (v1 / (2 * N * (N - 1))) +  
+                (v2 / (9 * N * (N - 1) * (N - 2)))
+    
+    out$sdS <- sqrt(out$varS)
+    out$se  <- out$sdS / out$D
+    
+    if (!continuity_correction) out$z <- out$S / out$sdS #out$tau.b / out$se
+    if (continuity_correction)  out$z <- (out$S - 1) / out$sdS 
+  }
   
-  if (!continuity_correction) out$z <- out$S / out$sdS #out$tau.b / out$se
-  if (continuity_correction)  out$z <- (out$S + 1) / out$sdS 
+  #out$tau   <- S / n0
+  #out$tau.b <- S / sqrt( (n0 - ti) * (n0 - ui) )
+  #out$D <- out$S / out$tau.b
+  #out$varS_tau_a <- (2 * (2 * N + 5)) / (9 * N * (N - 1))
+  #out$sdS_tau_a <- sqrt((2 * (2 * N + 5)) / (9 * N * (N - 1)))
   
   out$p <- pnorm(abs(out$z), lower.tail = FALSE) * 2
   
@@ -219,7 +254,6 @@
     out$p <- NA
     out$tau <- NA
   }
-  
-  
+
   out
 }

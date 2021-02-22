@@ -4,8 +4,17 @@
 \alias{export}
 \title{Export scan objects to html or latex}
 \usage{
-export(object, filename = NULL, kable_styling_options = list(),
-  kable_options = list(), cols, flip = FALSE, note = TRUE, ...)
+export(
+  object,
+  filename = NULL,
+  kable_styling_options = list(),
+  kable_options = list(),
+  cols,
+  flip = FALSE,
+  note = TRUE,
+  round = 2,
+  ...
+)
 }
 \arguments{
 \item{object}{An scdf}
@@ -17,12 +26,14 @@ the output will be written into this file.}
 
 \item{kable_options}{list with arguments passed to the kable function.}
 
-\item{cols}{Defines which columns are included when a scdf is exported. It is either a vector 
+\item{cols}{Defines which columns are included when a scdf is exported. It is either a vector
 with variable names or the string "main" will select the central variables.}
 
 \item{flip}{If TRUE, some objects are displayed with rows and columns flipped.}
 
 \item{note}{If TRUE additional information are printed below the table.}
+
+\item{round}{value for the digits argument passed to the internally used round function.}
 
 \item{...}{Further Arguments passed to internal functions.}
 }

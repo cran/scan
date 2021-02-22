@@ -38,10 +38,14 @@ pnd(GruenkeWilbert2014)
 
 }
 \seealso{
-Other overlap functions: \code{\link{corrected_tauSC}},
-  \code{\link{nap}}, \code{\link{overlapSC}},
-  \code{\link{pand}}, \code{\link{pem}}, \code{\link{pet}},
-  \code{\link{tauUSC}}
+Other overlap functions: 
+\code{\link{corrected_tau}()},
+\code{\link{nap}()},
+\code{\link{overlap}()},
+\code{\link{pand}()},
+\code{\link{pem}()},
+\code{\link{pet}()},
+\code{\link{tau_u}()}
 }
 \author{
 Juergen Wilbert

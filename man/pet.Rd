@@ -4,8 +4,7 @@
 \alias{pet}
 \title{Percent exceeding the trend}
 \usage{
-pet(data, dvar, pvar, mvar, ci = 0.95, decreasing = FALSE,
-  phases = c("A", "B"))
+pet(data, dvar, pvar, mvar, ci = 0.95, decreasing = FALSE, phases = c(1, 2))
 }
 \arguments{
 \item{data}{A single-case data frame. See \code{\link{scdf}} to learn about this format.}
@@ -53,10 +52,14 @@ pet(dat, ci = .99)
 
 }
 \seealso{
-Other overlap functions: \code{\link{corrected_tauSC}},
-  \code{\link{nap}}, \code{\link{overlapSC}},
-  \code{\link{pand}}, \code{\link{pem}}, \code{\link{pnd}},
-  \code{\link{tauUSC}}
+Other overlap functions: 
+\code{\link{corrected_tau}()},
+\code{\link{nap}()},
+\code{\link{overlap}()},
+\code{\link{pand}()},
+\code{\link{pem}()},
+\code{\link{pnd}()},
+\code{\link{tau_u}()}
 }
 \author{
 Juergen Wilbert

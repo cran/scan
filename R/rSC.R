@@ -45,15 +45,15 @@
 #'   indicates an increase in points / counts per MT.
 #' @param level Defines the level increase (effect size \emph{d}) at the
 #'   beginning of phase B. To assign different level effects to several
-#'   single-cases, use a vector of values (e.g. \code{d.level = c(.2, .4, .6)}).
+#'   single-cases, use a vector of values (e.g. \code{level = c(.2, .4, .6)}).
 #'   If the number of cases exceeds the length of the vector, values are
-#'   repeated. While using a binomial or poisson distribution, \code{d.level}
+#'   repeated. While using a binomial or poisson distribution, \code{level}
 #'   indicates an increase in points / counts with the onset of the B-phase.
 #' @param slope Defines the increase in scores - starting with phase B -
-#'   expressed as effect size \emph{d} per MT. \code{d.slope = .1} generates an
+#'   expressed as effect size \emph{d} per MT. \code{slope = .1} generates an
 #'   incremental increase of 0.1 standard deviations per MT for all phase B
 #'   measurements. To assign different slope effects to several single-cases,
-#'   use a vector of values (e.g. \code{d.slope = c(.1, .2, .3)}). If the number
+#'   use a vector of values (e.g. \code{slope = c(.1, .2, .3)}). If the number
 #'   of cases exceeds the length of the vector, values are repeated. While using
 #'   a binomial or poisson distribution, \code{d.slope} indicates an increase in
 #'   points / counts per MT.
@@ -294,6 +294,9 @@ design_rSC <- function(n = 1, phase.design = list(A = 5, B = 15),
     out$cases[[case]] <- design
   }
   attr(out, "call") <- mget(names(formals()), sys.frame(sys.nframe()))
+  
+  class(out) <- c("sc", "design")
+  
   out
 }
 

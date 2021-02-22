@@ -56,7 +56,7 @@
 #' pand(cubs, decreasing = TRUE)
 #' 
 #' @export
-pand <- function(data, dvar, pvar, decreasing = FALSE, correction = TRUE, phases = c("A","B")) {
+pand <- function(data, dvar, pvar, decreasing = FALSE, correction = TRUE, phases = c(1, 2)) {
   
   # set attributes to arguments else set to defaults of scdf
   if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv) else scdf_attr(data, .opt$dv) <- dvar
@@ -77,7 +77,7 @@ pand <- function(data, dvar, pvar, decreasing = FALSE, correction = TRUE, phases
     B[[i]] <- data[[i]][data[[i]][, pvar] == "B", dvar]
     data[[i]][, pvar] <- factor(data[[i]][, pvar])
     
-    phase.real[[i]]     <- as.numeric(data[[i]][order(data[[i]][, dvar]), pvar])
+    phase.real[[i]]     <- as.numeric(data[[i]][sort.list(data[[i]][[dvar]]), pvar])
     phase.expected[[i]] <- as.numeric(data[[i]][, pvar])
     
   }	
@@ -106,7 +106,7 @@ pand <- function(data, dvar, pvar, decreasing = FALSE, correction = TRUE, phases
     n2 <- length(B[[i]])
     n12 <- n1 + n2
     
-    rang <- order(z, decreasing = decreasing)
+    rang <- sort.list(unlist(z), decreasing = decreasing)
     AB <- sum(rang[1:n1] > n1)
     BA <- sum(rang[(n1 + 1):n12] <= n1)
     if(correction) {

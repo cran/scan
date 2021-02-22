@@ -6,14 +6,25 @@
 \alias{design_rSC}
 \title{Single-case data generator}
 \usage{
-rSC(design = NULL, round = NA, random.names = FALSE, seed = NULL,
-  ...)
+rSC(design = NULL, round = NA, random.names = FALSE, seed = NULL, ...)
 
-design_rSC(n = 1, phase.design = list(A = 5, B = 15),
-  trend = list(0), level = list(0), slope = list(0),
-  rtt = list(0.8), m = list(50), s = list(10), extreme.p = list(0),
-  extreme.d = c(-4, -3), missing.p = list(0),
-  distribution = "normal", prob = 0.5, MT = NULL, B.start = NULL)
+design_rSC(
+  n = 1,
+  phase.design = list(A = 5, B = 15),
+  trend = list(0),
+  level = list(0),
+  slope = list(0),
+  rtt = list(0.8),
+  m = list(50),
+  s = list(10),
+  extreme.p = list(0),
+  extreme.d = c(-4, -3),
+  missing.p = list(0),
+  distribution = "normal",
+  prob = 0.5,
+  MT = NULL,
+  B.start = NULL
+)
 }
 \arguments{
 \item{design}{A design matrix which is created by design_rSC and specifies
@@ -46,16 +57,16 @@ indicates an increase in points / counts per MT.}
 
 \item{level}{Defines the level increase (effect size \emph{d}) at the
 beginning of phase B. To assign different level effects to several
-single-cases, use a vector of values (e.g. \code{d.level = c(.2, .4, .6)}).
+single-cases, use a vector of values (e.g. \code{level = c(.2, .4, .6)}).
 If the number of cases exceeds the length of the vector, values are
-repeated. While using a binomial or poisson distribution, \code{d.level}
+repeated. While using a binomial or poisson distribution, \code{level}
 indicates an increase in points / counts with the onset of the B-phase.}
 
 \item{slope}{Defines the increase in scores - starting with phase B -
-expressed as effect size \emph{d} per MT. \code{d.slope = .1} generates an
+expressed as effect size \emph{d} per MT. \code{slope = .1} generates an
 incremental increase of 0.1 standard deviations per MT for all phase B
 measurements. To assign different slope effects to several single-cases,
-use a vector of values (e.g. \code{d.slope = c(.1, .2, .3)}). If the number
+use a vector of values (e.g. \code{slope = c(.1, .2, .3)}). If the number
 of cases exceeds the length of the vector, values are repeated. While using
 a binomial or poisson distribution, \code{d.slope} indicates an increase in
 points / counts per MT.}

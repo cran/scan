@@ -12,7 +12,7 @@ print.sc <- function(x, ...) {
   if (value == "base_corr_tau") {
     cat("Baseline corrected tau\n\n")
     cat("Auto correlation in baseline:\n")
-    cat("tau =", round(x$auto_tau$tau.b, 2))
+    cat("tau =", round(x$auto_tau$tau, 2))
     cat("; p =", round(x$auto_tau$p, 3), "\n\n")
     
     cat("Baseline corrected tau:\n")
@@ -72,28 +72,40 @@ if (value == "mpr") {
 
   if (value == "TAU-U") {	
     cat("Tau-U\n")
-    cat("Method: ",x$method, "\n\n")
+    cat("Method: ", x$method, "\n\n")
     cat("Overall Tau-U: \n")
-    print(x$Overall_tau_u)
+    
+    print(x$Overall_tau_u, row.names = FALSE, digits = 3)
+    
     cat("\n")
-    out <- lapply(x$table, function(x) round(x, 3))
+    #out <- lapply(x$table, function(x) round(x, 3))
+    out <- x$table
     arg <- list(...)
     complete <- FALSE
     if (any(names(arg) == "complete")) complete <- arg$complete
     if (!complete) {
-      VAR <- c("S", "D", "Tau", "Tau.b", "Z", "p")
-      out <- lapply(x$table, function(x) round(x[-1:-4, VAR], 3))
+      select_vars <- c("Tau", "SE_Tau", "Z", "p")
+      select_rows <- match(
+        c(
+          "A vs. B", 
+          "A vs. B - Trend A",
+          "A vs. B + Trend B", 
+          "A vs. B + Trend B - Trend A"
+        ), row.names(x$table[[1]])
+      )
+        
+      out <- lapply(x$table, function(x) round(x[select_rows, select_vars], 3))
     }
-    out <- lapply(
-      out, 
-      function(x) {
-        names(x)[which(names(x) == "Tau")]   <- "\u03c4"
-        names(x)[which(names(x) == "Tau.b")] <- "\u03c4b"
-        x
-      }
-    )
+    #out <- lapply(
+    #  out, 
+    #  function(x) {
+    #    names(x)[which(names(x) == "Tau")]   <- "\u03c4"
+    #    names(x)[which(names(x) == "Tau.b")] <- "\u03c4b"
+    #    x
+    #  }
+    #)
     
-    print(out)
+    print(out, digits = 3)
   }
   
 # power -------------------------------------------------------------------
@@ -493,13 +505,16 @@ if (value == "mpr") {
     cat("sd slope-effect: ", apply(sapply(x$cases, function(x) {x$slope}), 1, sd, na.rm = TRUE), "\n")
     cat("Distribution: ", x$distribution)
   }  
-  ##### Additonal notes #####
+  
+  
+  ##### Additional notes #####
   if (note) {
     if (attr(x, .opt$dv) != "values" || attr(x, .opt$phase) != "phase" || attr(x, .opt$mt) != "mt")
       cat("\nNote. The following variables were used in this analysis:\n      '", 
-          attr(x, .opt$dv), "' as independent variable, '", 
+          attr(x, .opt$dv), "' as dependent variable, '", 
           attr(x, .opt$phase), "' as phase ,and '", 
           attr(x, .opt$mt),"' as measurement time.\n", sep = "")
     
   }
-}
+
+  }

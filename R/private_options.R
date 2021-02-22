@@ -33,8 +33,12 @@
   female.names = .female.names,
   male.names   = .male.names,
   names        = .names,
-  function_debugging_warning  = "This function is in an experimental state and only implemented for testing und debugging purposes.\n",
-  function_deprecated_warning = "This function is deprecated. It will be dropped without any further notice in a future update of scan.\n",
+  function_debugging_warning  = "This function is in an experimental state and only implemented for testing und debugging purposes.",
+  function_deprecated_warning = "This function is deprecated. It might be dropped without any further notice in a future update of scan.",
+  startup_message = paste0(
+    "scan ", utils::packageVersion("scan"), 
+    " (", utils::packageDate('scan'), ")\n",
+    "Single-Case Data Analysis for Single and Multiple Baseline Designs\n"),
   style = list()
   )
 
@@ -46,7 +50,8 @@
   lty = "solid", lty.seperators = "dashed", lty.grid = "dotted",
   cex = 1, cex.axis = 0.8, cex.text = 1, cex.lab = 1,
   col.lines = "black", col.dots = "black", col.seperators = "black", col.fill = "grey75", col.fill.bg = "grey95", 
-  col.bg = "white", col = "black", col.text = "black", col.fill.bg = "grey95"
+  col.bg = "white", col = "black", col.text = "black", col.fill.bg = "grey95",
+  names = list(side = 3, line = -1, adj = 0)
 )
 
 .opt$style$yaxis <- list(
@@ -73,26 +78,30 @@
 )
 
 
-
 .opt$style$chart <- list(
   fill.bg = TRUE, col.fill.bg = "grey98", fill = TRUE, col.fill = "grey50", 
   annotations = list(cex = 0.6, col = "black", offset = 0.4), pch = 19, 
-  frame = NA, grid = "grey75", lwd = 0.7, cex.text = 0.8, cex.lab = 0.8 )
+  frame = NA, grid = "grey75", lwd = 0.7, cex.text = 0.8, cex.lab = 0.8 
+)
 
 
 .opt$style$ridge <- list(
-  fill = "grey50", fill.bg = TRUE, col.fill.bg = "grey95", pch = 20)
+  fill = "grey50", fill.bg = TRUE, col.fill.bg = "grey95", pch = 20
+)
 
 .opt$style$annotate <- list(
-  annotations = list(cex = 0.6, col = "black", offset = 0.4), pch = 19)
+  annotations = list(cex = 0.6, col = "black", offset = 0.4), pch = 19
+)
 
 .opt$style$grid <- list(
   frame = NA, grid = TRUE, col.grid = "lightblue", fill.bg = TRUE, col.fill.bg = "grey95", lwd = 0.7, 
-  pch = 19, cex.axis = 0.8)  
+  pch = 19, cex.axis = 0.8
+)  
 
 .opt$style$grid2 <- list(
   frame = NA, fill = "white", grid = TRUE, col.grid = "lightgreen", frame = "black", 
-  fill.bg = TRUE, col.fill.bg = "grey95", lwd = 0.7, pch = 1, cex.axis = 0.8)  
+  fill.bg = TRUE, col.fill.bg = "grey95", lwd = 0.7, pch = 1, cex.axis = 0.8
+)  
 
 .opt$style$dark <- list(
   fill.bg = TRUE, col.fill.bg = "black", bty = "o", col.lines = "gold", col.bg = "grey10", 
@@ -126,8 +135,11 @@
     param <- (nrow(res) - 2) / 2
     res[2 + param + 1, 5]
   },
-  tauU = function(x) tauUSC(x, method = "parker")$table[[1]][5, 12],
-  base_tau = function(x) corrected_tauSC(x)$p,
+  tauU = function(x) {
+    res <- tau_u(x, method = "parker")$table[[1]]
+    res[which(row.names(res) == "A vs. B - Trend A"), which(names(res) == "p")]
+  },
+  base_tau = function(x) corrected_tau(x)$p,
   
-  rand = function(x) randSC(x, number = 100, exclude.equal = "auto", output = "p")
+  rand = function(x) rand_test(x, number = 100, exclude.equal = "auto", output = "p")
 )
