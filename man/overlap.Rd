@@ -33,7 +33,7 @@ and 4 (as B). Default is \code{phases = c("A","B")}.}
 \value{
 \item{overlap}{A data frame consisting of the following indices for
 each single-case for all cases: PND, PEM, PET, NAP, PAND, Tau-U (A vs. B -
-Trend A), Diff_mean, Diff_trend, SMD.}
+Trend A), Diff_mean, Diff_trend, SMD, Hedges-g.}
 \item{phases.A}{Selection for A phase.}
 \item{phases.B}{Selection for B phase.}
 \item{design}{Phase design.}
@@ -41,6 +41,9 @@ Trend A), Diff_mean, Diff_trend, SMD.}
 \description{
 The \code{overlap} function provides the most common overlap indices for
 single-case data and some additional statistics.
+}
+\details{
+See corresponding functions of PND, PEM, PET, NAP, PAND for calculation. Tau_U reports "A vs. B + Trend B - Trend A". Base_Tau is baseline corrected tau (correction applied when autocorrelation in phase A is significant). Diff_mean is the mean difference. Diff_trend is the difference in the regression estimation of the dependent variable on measurement-time ( x ~ mt) for each phase. SMD is the mean difference divided by the standardd eviation of phase A. Hedges_g is the mean difference divided by the pooled standard deviation [sqrt(((nA - 1) * sdA^2 + (nB - 1) * sdB^2) / (nA + nB - 2) )] with a hedges correction applied [(* (1 - (3 / (4 * n - 9) ) )].
 }
 \examples{
 

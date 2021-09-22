@@ -4,21 +4,21 @@
 \alias{subset.scdf}
 \title{Subset cases, rows, and variables}
 \usage{
-\method{subset}{scdf}(x, subset, select, cases, ...)
+\method{subset}{scdf}(x, filter, select, cases, ...)
 }
 \arguments{
 \item{x}{An scdf object.}
 
-\item{subset}{Logical expression indicating rows to keep: missing values are taken as false.}
+\item{filter}{Logical expression indicating rows to keep: missing values are taken as false.}
 
 \item{select}{Expression, indicating columns to select from an scdf.}
 
 \item{cases}{Expression, indicating cases to keep from an scdf.}
 
-\item{...}{[use not implemented yet]}
+\item{...}{[not implemented]}
 }
 \value{
-An scdf with cases filtered by the filter expression.
+An scdf.
 }
 \description{
 Subset cases, rows, and variables

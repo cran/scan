@@ -2,14 +2,82 @@
 % Please edit documentation in R/print.sc.R
 \name{print.sc}
 \alias{print.sc}
+\alias{print.sc_power}
+\alias{print.sc_ac}
+\alias{print.sc_cdc}
+\alias{print.sc_bctau}
+\alias{print.sc_desc}
+\alias{print.sc_design}
+\alias{print.sc_hplm}
+\alias{print.sc_overlap}
+\alias{print.sc_mplm}
+\alias{print.sc_nap}
+\alias{print.sc_outlier}
+\alias{print.sc_pand}
+\alias{print.sc_pem}
+\alias{print.sc_pet}
+\alias{print.sc_pnd}
+\alias{print.sc_tauu}
+\alias{print.sc_plm}
+\alias{print.sc_trend}
+\alias{print.sc_rand}
+\alias{print.sc_rci}
 \title{Print method for scan objects}
 \usage{
-\method{print}{sc}(x, ...)
+\method{print}{sc_power}(x, digits = "auto", ...)
+
+\method{print}{sc_ac}(x, digits = "auto", ...)
+
+\method{print}{sc_cdc}(x, nice = TRUE, ...)
+
+\method{print}{sc_bctau}(x, nice = TRUE, digits = "auto", ...)
+
+\method{print}{sc_desc}(x, digits = "auto", ...)
+
+\method{print}{sc_design}(x, ...)
+
+\method{print}{sc_hplm}(x, ...)
+
+\method{print}{sc_overlap}(x, digits = "auto", ...)
+
+\method{print}{sc_mplm}(x, digits = "auto", std = FALSE, ...)
+
+\method{print}{sc_nap}(x, digits = "auto", ...)
+
+\method{print}{sc_outlier}(x, digits = "auto", ...)
+
+\method{print}{sc_pand}(x, ...)
+
+\method{print}{sc_pem}(x, ...)
+
+\method{print}{sc_pet}(x, ...)
+
+\method{print}{sc_pnd}(x, ...)
+
+\method{print}{sc_tauu}(x, complete = FALSE, digits = "auto", ...)
+
+\method{print}{sc_plm}(x, ...)
+
+\method{print}{sc_trend}(x, digits = 3, ...)
+
+\method{print}{sc_rand}(x, ...)
+
+\method{print}{sc_rci}(x, ...)
 }
 \arguments{
 \item{x}{Object}
 
+\item{digits}{The minimum number of significant digits to be use. 
+If set to "auto" (default), values are predefined.}
+
 \item{...}{Further parameters passed to the print function}
+
+\item{nice}{If set TRUE (default) output values are rounded and optimized for
+publication tables.}
+
+\item{std}{If TRUE, a table with standardized estimates is included.}
+
+\item{complete}{Print further parameters.}
 }
 \description{
 Print method for scan objects
