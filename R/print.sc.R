@@ -8,27 +8,21 @@
 NULL
 
 #' @rdname print.sc
+#' @param duration If TRUE the duration for computation is printed.
 #' @export
-print.sc_power <- function(x, digits = "auto", ...) {
-
-  cat("Test-Power in percent:\n")
-  ma <- matrix(
-    unlist(x[1:16]) * 100, byrow = FALSE, ncol = 2, 
-    dimnames = list(
-      c(
-        "tauU: A vs. B - Trend A", 
-        paste0("Rand-Test: ",x$rand.test.stat[1]),  
-        "PLM.Norm: Level", 
-        "PLM.Norm: Slope", 
-        "PLM.Poisson: Level", 
-        "PLM.Poisson: Slope", 
-        "HPLM: Level", 
-        "HPLM: Slope"
-      ), 
-      c("Power", "Alpha-error")
+print.sc_power <- function(x, duration = FALSE, ...) {
+  
+  cat("Test-Power in percent:\n\n")
+  
+  class(x) <- "data.frame"
+  print(x,row.names = FALSE)
+  if (duration) 
+    cat(
+      "\nComputation duration is", 
+      round(attr(x, "computation_duration")[3], 1), 
+      "seconds.\n"
     )
-  )
-  ma
+  
 }
 
 
@@ -77,7 +71,7 @@ print.sc_cdc <- function(x, nice = TRUE, ...) {
   if (x$N > 1) {
     cat("Overall evaluation of all MBD instances:  ",x$cdc_all,"\n")
   }
-
+  
 }
 
 #' @rdname print.sc
@@ -87,15 +81,19 @@ print.sc_cdc <- function(x, nice = TRUE, ...) {
 print.sc_bctau <- function(x, nice = TRUE, digits = "auto", ...) {
   
   cat("Baseline corrected tau\n\n")
-  cat("\n")
   
+  if (x$repeated) {
+    cat("Method: Siegel repeated median regression\n")
+  } else {
+    cat("Method: Theil-Sen regression\n")
+  }
   
   if (x$continuity) {
     cat("Continuity correction applied\n")
   } else {
     cat("Continuity correction not applied.\n")
   }
-  
+  cat("\n")
   if (digits == "auto") {
     x$parameters$p <- round(x$parameters$p, 3)
     x$parameters$z <- sprintf("%.2f", x$parameters$z)
@@ -112,11 +110,11 @@ print.sc_bctau <- function(x, nice = TRUE, digits = "auto", ...) {
   
   rownames(x$parameters) <- x$parameters$Model
   print(x$parameters[,-1], ...)
-
+  
   cat("\n")
   if (x$correction)  cat("Baseline correction should be applied.\n\n")
   if (!x$correction) cat("Baseline correction should not be applied.\n\n")
-
+  
 }
 
 #' @rdname print.sc
@@ -124,7 +122,7 @@ print.sc_bctau <- function(x, nice = TRUE, digits = "auto", ...) {
 #' publication tables.
 #' @export
 print.sc_desc <- function(x, digits = "auto", ...) {
-
+  
   if (digits == "auto") digits <- 3
   
   cat("Describe Single-Case Data\n\n")
@@ -136,7 +134,7 @@ print.sc_desc <- function(x, digits = "auto", ...) {
   cat("\n")
   print(out[-(1:(2 * length(x$design) + 1)),, drop = FALSE], digits = digits, ...)
   .note_vars(x)
-
+  
 }
 
 #' @rdname print.sc
@@ -146,73 +144,87 @@ print.sc_desc <- function(x, digits = "auto", ...) {
 print.sc_design <- function(x, ...) {
   cat("A scdf design matrix\n\n")
   cat("Number of cases:", length(x$cases), "\n")
-  cat("Mean: ", x$cases[[1]]$m[1], "\n")
-  cat("SD = ", x$cases[[1]]$s[1], "\n")
-  cat("rtt = ", x$cases[[1]]$rtt[1], "\n")
-  cat("Phase design: ", as.character(x$cases[[1]]$phase), "\n")
+  cat("Distribution: ", x$distribution, "\n")
+  cat("Start values: ", unique(
+    sapply(x$cases, function(x) {x$start_value[1]})), "\n")
+  if (x$distribution %in% c("normal", "gaussian")) {
+    cat("SD = ", unique(sapply(x$cases, function(x) {x$s[1]})), "\n")
+    cat("rtt = ", unique(sapply(x$cases, function(x) {x$rtt[1]})), "\n")
+  }
+  cat("Phase design: ", unique(sapply(x$cases, function(x) {
+    paste0(x$phase, "=", x$length, collapse = " ")
+  })), "\n")
+  cat("Trend effect: ", unique(sapply(x$cases, function(x) {x$trend[1]})), "\n")
+  cat("Level effect: ", unique(sapply(x$cases, function(x) {
+    paste0(x$phase[-1], "=", x$level[-1], collapse = " ")
+  })), "\n")
+  cat("Slope effect: ", unique(sapply(x$cases, function(x) {
+    paste0(x$phase[-1], "=", x$slope[-1], collapse = " ")
+  })), "\n")
+  cat("Missing proportion: ", unique(sapply(x$cases, function(x) {x$missing})), "\n")
   
-  cat("mean trend-effect: ", apply(sapply(x$cases, function(x) {x$trend}), 1, mean, na.rm = TRUE)[1], "\n")
-  cat("mean level-effect: ", apply(sapply(x$cases, function(x) {x$level}), 1, mean, na.rm = TRUE), "\n")
-  cat("mean slope-effect: ", apply(sapply(x$cases, function(x) {x$slope}), 1, mean, na.rm = TRUE), "\n")
-  cat("sd trend-effect: ", apply(sapply(x$cases, function(x) {x$trend}), 1, sd, na.rm = TRUE)[1], "\n")
-  cat("sd level-effect: ", apply(sapply(x$cases, function(x) {x$level}), 1, sd, na.rm = TRUE), "\n")
-  cat("sd slope-effect: ", apply(sapply(x$cases, function(x) {x$slope}), 1, sd, na.rm = TRUE), "\n")
-  cat("Distribution: ", x$distribution)
-
+  ext_p <- unique(sapply(x$cases, function(x) {x$extreme.p}))
+  cat("Extreme proportion: ", ext_p, "\n")
+  if (ext_p != 0) {
+    cat("Extreme range: ", unique(sapply(x$cases, function(x) {
+      paste0(x$extreme.low, "/", x$extreme.high, collapse = " ")
+    })), "\n")
+  }
+  
 }
 
 #' @rdname print.sc
 #' @export
 print.sc_hplm <- function(x, ...) {
-    cat("Hierarchical Piecewise Linear Regression\n\n")
-    cat("Estimation method", x$model$estimation.method,"\n")
-    cat("Slope estimation method:", x$model$interaction.method,"\n")
-    cat(x$N, "Cases\n\n")
-    
-    out <- list()
-    
-    if (x$model$ICC) {
-      out$ICC <- sprintf("ICC = %.3f; L = %.1f; p = %.3f\n\n", 
-                         x$ICC$value, x$ICC$L, x$ICC$p)
-      cat(out$ICC)
+  cat("Hierarchical Piecewise Linear Regression\n\n")
+  cat("Estimation method", x$model$estimation.method,"\n")
+  cat("Slope estimation method:", x$model$interaction.method,"\n")
+  cat(x$N, "Cases\n\n")
+  
+  out <- list()
+  
+  if (x$model$ICC) {
+    out$ICC <- sprintf("ICC = %.3f; L = %.1f; p = %.3f\n\n", 
+                       x$ICC$value, x$ICC$L, x$ICC$p)
+    cat(out$ICC)
+  }
+  
+  md <- as.data.frame(summary(x$hplm)$tTable)
+  
+  colnames(md) <- c("B", "SE", "df", "t", "p")
+  
+  row.names(md) <- .plm.row.names(row.names(md), x)
+  
+  md$B  <- round(md$B,  3)
+  md$SE <- round(md$SE, 3)
+  md$t  <- round(md$t,  3)
+  md$p  <- round(md$p,  3)
+  
+  out$ttable <- md
+  
+  cat("Fixed effects (",deparse(x$model$fixed),")\n\n", sep = "")
+  print(md)
+  
+  cat("\nRandom effects (",deparse(x$model$random),")\n\n", sep = "")
+  SD <- round(as.numeric(VarCorr(x$hplm)[,"StdDev"]), 3)
+  md <- data.frame("EstimateSD" = SD)
+  rownames(md) <- names(VarCorr(x$hplm)[, 2])
+  
+  row.names(md) <- .plm.row.names(row.names(md), x)
+  
+  if (x$model$lr.test) {
+    if (is.null(x$LR.test[[1]]$L.Ratio)) {
+      x$LR.test[[1]]$L.Ratio <- NA
+      x$LR.test[[1]]$"p-value" <- NA
+      x$LR.test[[1]]$df <- NA
     }
     
-    md <- as.data.frame(summary(x$hplm)$tTable)
-    
-    colnames(md) <- c("B", "SE", "df", "t", "p")
-    
-    row.names(md) <- .plm.row.names(row.names(md), x)
-    
-    md$B  <- round(md$B,  3)
-    md$SE <- round(md$SE, 3)
-    md$t  <- round(md$t,  3)
-    md$p  <- round(md$p,  3)
-    
-    out$ttable <- md
-    
-    cat("Fixed effects (",deparse(x$model$fixed),")\n\n", sep = "")
-    print(md)
-    
-    cat("\nRandom effects (",deparse(x$model$random),")\n\n", sep = "")
-    SD <- round(as.numeric(VarCorr(x$hplm)[,"StdDev"]), 3)
-    md <- data.frame("EstimateSD" = SD)
-    rownames(md) <- names(VarCorr(x$hplm)[, 2])
-    
-    row.names(md) <- .plm.row.names(row.names(md), x)
-    
-    if (x$model$lr.test) {
-      if (is.null(x$LR.test[[1]]$L.Ratio)) {
-        x$LR.test[[1]]$L.Ratio <- NA
-        x$LR.test[[1]]$"p-value" <- NA
-        x$LR.test[[1]]$df <- NA
-      }
-      
-      md$L  <- c(round(unlist(lapply(x$LR.test, function(x) x$L.Ratio[2])), 2), NA)
-      md$df <- c(unlist(lapply(x$LR.test,       function(x) x$df[2] - x$df[1])), NA)
-      md$p  <- c(round(unlist(lapply(x$LR.test, function(x) x$"p-value"[2])), 3), NA)
-    }
-    
-    print(md, na.print = "-", ...)
+    md$L  <- c(round(unlist(lapply(x$LR.test, function(x) x$L.Ratio[2])), 2), NA)
+    md$df <- c(unlist(lapply(x$LR.test,       function(x) x$df[2] - x$df[1])), NA)
+    md$p  <- c(round(unlist(lapply(x$LR.test, function(x) x$"p-value"[2])), 3), NA)
+  }
+  
+  print(md, na.print = "-", ...)
 }
 
 
@@ -271,7 +283,7 @@ print.sc_mplm <- function(x, digits = "auto", std = FALSE, ...) {
     cat("\nStandardized coefficients: \n")
     print(coef_std, digits = digits, ...)
   }
- 
+  
   cat("\n")
   cat("Formula: ")
   print(x$formula, showEnv = FALSE)
@@ -289,7 +301,7 @@ print.sc_mplm <- function(x, digits = "auto", std = FALSE, ...) {
 #' @rdname print.sc
 #' @export
 print.sc_nap <- function(x, digits = "auto", ...) {
-
+  
   if (digits == "auto") digits <- 2
   cat("Nonoverlap of All Pairs\n\n")
   print(x$nap, row.names = FALSE, digits = digits)
@@ -300,7 +312,7 @@ print.sc_nap <- function(x, digits = "auto", ...) {
 #' @rdname print.sc
 #' @export
 print.sc_outlier <- function(x, digits = "auto", ...) {
-
+  
   cat("Outlier Analysis for Single-Case Data\n\n")
   
   if (x$criteria[1] == "CI") {
@@ -322,7 +334,8 @@ print.sc_outlier <- function(x, digits = "auto", ...) {
   }
   
   if (x$criteria[1] == "Cook") {
-    cat("Criteria: Cook's Distance based on piecewise-linear-regression exceeds", x$criteria[2],"\n\n")
+    cat("Criteria: Cook's Distance based on piecewise-linear-regression exceeds", 
+        x$criteria[2],"\n\n")
   }
   
   for(i in 1:length(x$dropped.n)) {
@@ -336,15 +349,19 @@ print.sc_outlier <- function(x, digits = "auto", ...) {
 #' 
 print.sc_pand <- function(x, ...) {
   cat("Percentage of all non-overlapping data\n\n")
-  cat("PAND = ", round(x$PAND, 1), "%\n")
-  cat("\u03A6 = ", round(x$phi, 3), " ; \u03A6\u00b2 = ", round(x$phi^2, 3), "\n\n")
-  cat("Number of Cases:", x$N, "\n")
+  cat("PAND = ", round(x$pand, 1), "%\n")
+  cat("\u03A6 = ", round(x$phi, 3), 
+      " ; \u03A6\u00b2 = ", 
+      round(x$phi^2, 3), "\n\n")
+  cat("Number of cases:", x$N, "\n")
   cat("Total measurements:", x$n, " ")
   cat("(in phase A: ", x$nA, "; in phase B: ", x$nB, ")\n", sep = "")
   cat("n overlapping data per case: ")
-  cat(x$OD.PP, sep = ", ")
+  cat(x$overlaps_cases, sep = ", ")
   cat("\n")
-  cat("Total overlapping data: n =",x$OD , "; percentage =", round(x$POD, 1), "\n")
+  cat("Total overlapping data: n =",x$overlaps , 
+      "; percentage =", round(x$perc_overlap, 1), 
+      "\n")
   ma <- x$matrix
   cat("\n")
   cat("2 x 2 Matrix of proportions\n")
@@ -357,7 +374,7 @@ print.sc_pand <- function(x, ...) {
   cat("\n")
   cat(" total",sum(round(ma[, 1] * 100, 1)), sum(round(ma[, 2] * 100, 1)), sep = "\t")
   cat("\n")
-  ma <- x$matrix.counts
+  ma <- x$matrix_counts
   cat("\n")
   cat("2 x 2 Matrix of counts\n")
   cat("\texpected\n")
@@ -448,11 +465,14 @@ print.sc_tauu <- function(x, complete = FALSE, digits = "auto", ...) {
   
   cat("Tau-U\n")
   cat("Method:", x$method, "\n")
-  cat("Applied Kendall's Tau-", x$tau_method, "\n\n", sep = "")
+  cat("Applied Kendall's Tau-", x$tau_method, "\n", sep = "")
+  if (complete || (length(x$table) > 1 && x$meta_method != "none")) {
+    cat(x$ci * 100, "% CIs for tau are reported.\n\n", sep = "")
+  } else cat("\n")
   
   out <- x$table
   
-  if (length(out) > 1) {
+  if (length(out) > 1 && x$meta_method != "none") {
     cat("Overall Tau-U\n")
     cat("Meta-anlysis model:", x$meta_method, "effect\n\n")
     print(x$Overall_tau_u, row.names = FALSE, digits = digits)
@@ -494,11 +514,11 @@ print.sc_plm <- function(x, ...) {
     cat("Correlated residuals up to autoregressions of lag",
         x$ar, "are modelled\n\n")
   
-  if (x$family == "poisson" || x$family == "nbinomial") {
+  if (x$family == "poisson" || x$family == "binomial") {
     Chi <- x$full$null.deviance - x$full$deviance
     DF <- x$full$df.null - x$full$df.residual
     cat(sprintf(
-      "\u0347\u00b2(%d) = %.2f; p = %0.3f; AIC = %.0f\n\n", 
+      "X\u00b2(%d) = %.2f; p = %0.3f; AIC = %.0f\n\n", 
       DF, Chi, 1 - pchisq(Chi, df = DF), x$full$aic)
     )	
   } else {
@@ -511,23 +531,29 @@ print.sc_plm <- function(x, ...) {
   
   if (x$ar == 0) res <- summary(x$full.model)$coefficients
   if (x$ar  > 0) res <- summary(x$full.model)$tTable
+  
+  ci <- suppressMessages(confint(x$full))
+  parameter_filter <- apply(ci, 1, function(x) if(!all(is.na(x))) TRUE else FALSE)
+  ci <- ci[parameter_filter, ]
+  
   if (nrow(res) == 1) {
     res <- cbind(
       res[, 1, drop = FALSE], 
-      t(suppressMessages(confint(x$full))), 
+      t(ci), 
       res[, 2:4, drop = FALSE]
     )
   } else res <- cbind(
     res[,1], 
-    suppressMessages(confint(x$full)), 
+    ci, 
     res[, 2:4]
   )
   
   res <- round(res, 3)
   res <- as.data.frame(res)
-  if (!is.null(x$r.squares)) 
+  if (!is.null(x$r.squares)) {
+    x$r.squares <- x$r.squares[c(parameter_filter[-1])]
     res$R2 <- c("", format(round(x$r.squares, 4)))
-  
+  }
   row.names(res) <- .plm.row.names(row.names(res), x)
   
   if (!is.null(x$r.squares))
@@ -535,7 +561,7 @@ print.sc_plm <- function(x, ...) {
   if (is.null(x$r.squares))
     colnames(res) <- c("B", "2.5%", "97.5%", "SE", "t", "p")		
   
-  if (x$family == "poisson" || x$family == "nbinomial") {
+  if (x$family == "poisson" || x$family == "binomial") {
     OR <- exp(res[, 1:3])
     Q <- (OR - 1) / (OR + 1)
     res <- cbind(res[, -7], round(OR, 3), round(Q, 2))
@@ -546,16 +572,24 @@ print.sc_plm <- function(x, ...) {
   }
   print(res)
   cat("\n")
-  cat("Autocorrelations of the residuals\n")
-  lag.max = 3
-  cr <- acf(residuals(x$full.model), lag.max = lag.max,plot = FALSE)$acf[2:(1 + lag.max)]
-  cr <- round(cr, 2)
-  print(data.frame(lag = 1:lag.max, cr = cr), row.names = FALSE)
-  cat("\n")
+  if (x$family == "gaussian") {
+    cat("Autocorrelations of the residuals\n")
+    lag.max = 3
+    cr <- acf(residuals(x$full.model), lag.max = lag.max,plot = FALSE)$acf[2:(1 + lag.max)]
+    cr <- round(cr, 2)
+    print(data.frame(lag = 1:lag.max, cr = cr), row.names = FALSE)
+    cat("\n")
+  }
   cat("Formula: ")
+  if (x$family == "binomial" && !x$dvar_percentage) {
+    x$formula[2] <- str2expression(paste0(x$formula[2], "/", x$var_trials))
+  }
   print(x$formula, showEnv = FALSE)
+  if (x$family == "binomial") {
+    cat("weights = ", x$var_trials)
+  }
   cat("\n")
-  .note_vars(x)
+  #.note_vars(x)
 }
 
 
@@ -654,6 +688,23 @@ print.sc_rci <- function(x, ...) {
   cat("Reliable Change Indices:\n")
   print(x$RCI)
   cat("\n")
+}
+
+#' @rdname print.sc
+#' @export
+print.sc_smd <- function(x, digits = "auto", ...) {
+  
+  if (digits == "auto") digits <- 3
+  
+  cat("Standardized mean differences\n\n")
+  x$smd[-1] <- round(x$smd[-1], digits)
+  out <- as.data.frame(t(x$smd[-1]))
+  colnames(out) <- x$smd$Case
+  
+  print(out[ , , drop = FALSE], digits = digits, ...)
+  cat("\n")
+  .note_vars(x)
+  
 }
 
 

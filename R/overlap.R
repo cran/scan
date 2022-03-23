@@ -65,7 +65,7 @@ overlap <- function(data, dvar, pvar, mvar,
     df$PET[i] <- pet(data, decreasing = decreasing)$PET
     df$NAP[i] <- nap(data, decreasing = decreasing)$nap$NAP[1]
     df$"NAP rescaled"[i] <- nap(data, decreasing = decreasing)$nap$Rescaled[1]
-    df$PAND[i] <- pand(data, decreasing = decreasing)$PAND
+    df$PAND[i] <- pand(data, decreasing = decreasing)$pand
     #df$TAU_U[i] <- tauUSC(data)$Overall_tau_u[2]
     df$Tau_U[i] <- tau_u(data)$table[[1]]["A vs. B + Trend B - Trend A", "Tau"]
     df$Base_Tau[i] <- corrected_tau(data)$tau
@@ -76,7 +76,7 @@ overlap <- function(data, dvar, pvar, mvar,
     mtA <- data[data[, pvar] == "A", mvar]
     mtB <- data[data[, pvar] == "B", mvar]
     nA <- sum(!is.na(A))
-    nB <- sum(!is.na(A))    
+    nB <- sum(!is.na(B))    
     n <- nA + nB
     mA <- mean(A, na.rm = TRUE)
     mB <- mean(B, na.rm = TRUE)    
@@ -118,7 +118,7 @@ overlap <- function(data, dvar, pvar, mvar,
   out
 }
 
-#' @rdname overlap
+#' @rdname deprecated-functions
 #' @export
 overlapSC <- function(...) {
   .deprecated_warning("overlap", "overlapSC")

@@ -22,9 +22,10 @@
 \alias{print.sc_trend}
 \alias{print.sc_rand}
 \alias{print.sc_rci}
+\alias{print.sc_smd}
 \title{Print method for scan objects}
 \usage{
-\method{print}{sc_power}(x, digits = "auto", ...)
+\method{print}{sc_power}(x, duration = FALSE, ...)
 
 \method{print}{sc_ac}(x, digits = "auto", ...)
 
@@ -63,14 +64,18 @@
 \method{print}{sc_rand}(x, ...)
 
 \method{print}{sc_rci}(x, ...)
+
+\method{print}{sc_smd}(x, digits = "auto", ...)
 }
 \arguments{
 \item{x}{Object}
 
-\item{digits}{The minimum number of significant digits to be use. 
-If set to "auto" (default), values are predefined.}
+\item{duration}{If TRUE the duration for computation is printed.}
 
 \item{...}{Further parameters passed to the print function}
+
+\item{digits}{The minimum number of significant digits to be use. 
+If set to "auto" (default), values are predefined.}
 
 \item{nice}{If set TRUE (default) output values are rounded and optimized for
 publication tables.}

@@ -256,12 +256,12 @@ export.sc_hplm <- function(object, caption = NA, footnote = NA, filename = NA,
   }
   
   out[, ] <- lapply(out[, ], function(x)
-    if (class(x) == "numeric") as.character(round(x, round)) else x
+    if (inherits(x, "numeric")) as.character(round(x, round)) else x
   )
   out <- cbind(Parameter = rownames(out), out, stringsAsFactors = FALSE)
   rownames(out) <- NULL
   md[, ] <- lapply(md, function(x)
-    if (class(x) == "numeric") as.character(round(x, round)) else x
+    if (inherits(x, "numeric")) as.character(round(x, round)) else x
   )
   md <- cbind(" " = rownames(md), md, stringsAsFactors = FALSE)
   rownames(md) <- NULL
@@ -554,14 +554,18 @@ export.sc_tauu <- function(object, caption = NA, footnote = NA, filename = NA,
   if (is.na(footnote)) {
     footnote <- paste(
       "Method is '", object$method, 
-      "'; Analyses based on Kendall's Tau ", object$tau_method, 
+      "'. Analyses based on Kendall's Tau ", object$tau_method, 
+      ". ", object$ci * 100, "% CIs for tau are reported. ",
+      object$meta_method, " effect model applied for meta-analyzes.",
       collapse = ""
     )
   }
   
   out <- object$Overall_tau_u
+  column_names <- c("Model", "Tau", "SE", "CI lower", "CI upper", "z", "p")
+  colnames(out) <- column_names
   out$p <- .nice_p(out$p)
-  colnames(out) <- c("Model", "Tau", "SE", "z", "p")
+  
   
   kable_options$x <- out
   kable_options$align <- c("l", rep("r", ncol(out) - 1))

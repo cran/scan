@@ -23,7 +23,3 @@ shift <- function(data, value, var) {
   }
   data
 }
-
-#' @rdname shift
-#' @export
-shiftSC <- function(...) shift(...)

@@ -1,11 +1,5 @@
 
-.prepare_scdf <- function(data, 
-                           na.rm = FALSE 
-                           #change.var.phase = FALSE, 
-                           #change.var.values = FALSE, 
-                           #change.var.mt = FALSE
-                           ) {
-  
+.prepare_scdf <- function(data, na.rm = FALSE) {
   
   # check class scdf validity
   if (.opt$rigorous_class_check) {
@@ -27,13 +21,17 @@
   names(data) <- .case_names(names(data), length(data))
   
   for(case in 1:length(data)) {
-    vars <- names(data[[case]])
-    if (na.rm) data[[case]] <- data[[case]][!is.na(data[[case]][, dvar]), ]
-    if (!is.factor(data[[case]][, pvar])) {
-      data[[case]][, pvar] <- as.factor(data[[case]][, pvar])
+    
+    if ("tbl_df" %in% class(data[[case]])) {
+      class(data[[case]]) <- "data.frame"
+      message("Found tibble within scdf and changed it to data.frame.")
     }
     
-    #if (is.na(names(data)[case])) names(data)[case] <- paste0("Case ", case)
+    vars <- names(data[[case]])
+    if (na.rm) data[[case]] <- data[[case]][!is.na(data[[case]][[dvar]]), ]
+    if (!is.factor(data[[case]][[pvar]])) {
+      data[[case]][[pvar]] <- as.factor(data[[case]][[pvar]])
+    }
   }
   data
 }

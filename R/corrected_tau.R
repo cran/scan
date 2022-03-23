@@ -72,7 +72,16 @@ corrected_tau <- function(data, dvar, pvar, mvar,
   x <- data[[dvar]]
   uncorrected_tau <- .kendall(x, y, continuity_correction = continuity)
   
-  if (auto_tau$p <= alpha) corr_applied <- TRUE else corr_applied <- FALSE
+  if (is.na(auto_tau$p)) {
+    corr_applied <- FALSE
+  } else {
+    if (auto_tau$p <= alpha) {
+      corr_applied <- TRUE
+    } else {
+      corr_applied <- FALSE
+    }
+  }
+  
   if (corr_applied) tau <- base_corr_tau else tau <- uncorrected_tau
 
   df <- data.frame(
@@ -103,11 +112,4 @@ corrected_tau <- function(data, dvar, pvar, mvar,
   attr(out, .opt$mt) <- mvar
   attr(out, .opt$dv) <- dvar
   out
-}
-
-#' @rdname corrected_tau
-#' @export
-corrected_tauSC <- function(...) {
-  .deprecated_warning("corrected_tau", "corrected_tauSC")
-  corrected_tau(...)
 }

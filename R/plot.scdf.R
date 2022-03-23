@@ -87,7 +87,7 @@
 #'        lines = list(type = "loreg", f = 0.2, lty = "solid", col = "black", lwd = 3))
 #' 
 #' ## Plot a random MBD over three cases and mark interesting MTs
-#' dat <- rSC(design = design_rSC(3))
+#' dat <- random_scdf(design = design(3))
 #' plot(dat, marks = list(positions = list(c(2,4,5),c(1,2,3),c(7,8,9)), col = "blue",
 #'        cex = 1.4), style = c("grid", "annotate", "tiny"))
 #' 
@@ -129,11 +129,11 @@ plotSC <- function(data, dvar, pvar, mvar,
   if (is.list(style)) {
     ref.style <- "default"
     if ("style" %in% names(style)) ref.style <- style$style
-    style <- c(style, style_plotSC(ref.style))
+    style <- c(style, style_plot(ref.style))
     style <- style[unique(names(style))]
   }
   
-  if (is.character(style)) style <- style_plotSC(style)
+  if (is.character(style)) style <- style_plot(style)
   
   #for pre style backwards compatibility
   sty_names <- c("fill", "fill.bg", "frame", "grid", "lwd", "pch", "text.ABlag", "type")
@@ -163,8 +163,8 @@ plotSC <- function(data, dvar, pvar, mvar,
   
   ### END: define style
   
-  # Marks on the outliers from outlierSC
-  if (identical(class(marks), c("sc_outlier"))) 
+  # Marks on the outliers from outlierandom_scdf
+  if (inherits(marks, "sc_outlier")) 
     marks <- list(positions = marks$dropped.mt)
   
   # name cases
@@ -343,7 +343,7 @@ plotSC <- function(data, dvar, pvar, mvar,
     # styling ------------------------------------------------------------
     
     # fill bg
-    if(class(style$fill.bg) == "character") {
+    if(inherits(style$fill.bg, "character")) {
       style$col.fill.bg <- style$fill.bg
       style$fill.bg <- TRUE
     }
@@ -369,7 +369,7 @@ plotSC <- function(data, dvar, pvar, mvar,
     }
     
     # grid
-    if(class(style$grid) == "character") {
+    if(inherits(style$grid, "character")) {
       style$col.grid <- style$grid
       style$grid <- TRUE
     }
@@ -390,7 +390,7 @@ plotSC <- function(data, dvar, pvar, mvar,
     
     if (style$fill == "" || is.na(style$fill)) style$fill <- FALSE
     
-    if(class(style$fill) == "character") {
+    if(inherits(style$fill, "character")) {
       style$col.fill <- style$fill
       style$fill <- TRUE
     }
@@ -449,7 +449,7 @@ plotSC <- function(data, dvar, pvar, mvar,
         marks.pch <- marks[[which(names(marks) == "pch")]]
       }
       
-      if (class(marks.pos) == "numeric") {
+      if (inherits(marks.pos, "numeric")) {
         mks <- marks.pos
       } else {
         mks <- marks.pos[[case]]
@@ -806,7 +806,7 @@ plotSC <- function(data, dvar, pvar, mvar,
     "movingMedian"
   )
   
-  if (class(lines) != "list") {
+  if (!inherits(lines, "list")) {
     lines <- lapply(lines, function(x) x)
   }
   

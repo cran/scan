@@ -1,3 +1,52 @@
+# scan 0.54
+
+## new functions
+
+- `transform()`: Takes a scdf and calculates or modifies variables 
+for each case (`transform(exampleAB, z_values = scale(values), t_values = 50 + z_values * 10)`).
+- `smd()` reporting various types of standardized mean differences.
+
+## reanmed functions (old functionnames still work)
+
+- `readSC()` -> `read_scdf()` 
+- `writeSC()` -> `write_scdf()`
+- `design_rSC()` -> `design()`
+- `rSC()` -> `random_scdf()`
+
+## Complete rework - as new
+
+- `power_test()` with various extensions, optimizations, and solved various bugs. rewrote the `print` method, added an argument `duration` to print the computation duration. Added the `'n_trials'` argument for binomial distributions. Extended the help page.  
+- `design()` and its print method. Extended the help page. Rewrote the algorithm for the 'binomial' distribution.  
+
+## Extended functions
+
+- `plm()`: rewrote the analysis function for binomial tests. These now need an argument `var_trials` to define the number of trials per measurement. The  `dvar_percentage` argument must be set TRUE when the dependent variables are percentages (and `family = 'binomal'`).
+- speed optimized `random_scdf()`. Rewrote the algorithm for 'poisson' distributed measures. Rewrote the algorithm for the 'binomial' distribution. Extended the help page.  
+- `read_scdf()`: extracts filetype from file extension.
+- `read_scdf()`: New `yaml` import options for scdf files
+
+```yml
+Anna:
+  values:
+    A: [1, 3, 4, 5, 6, 7]
+    B: [8, 9, 10, 10, 11]
+
+Toni:
+  values:
+    A: [2, 3, 4, 5, 6, 7]
+    B: [3, 9, 10, 10,11]
+  control_var: [1,2,3,4,5,6,7,8,1,2,3]
+```
+
+- `tau_u()` #51: Added option for confidence intervals for tau_u output.
+
+## Solved error in functions
+
+- `describe()`: solved wrong calculation of Hedges G when phase length differed.
+- `plm()` solved #46: throws no error, when a phase is of length 1.
+- `corrected_tau()` solved #48: throws warning when A phase has less than three rows.
+- solved #49: changes class from tibble to data.frame within scdf.
+
 # scan 0.53
 
 ## Major changes
@@ -12,22 +61,22 @@ pipe operator, pipes seem to become the standard. For compatibility with older R
 
 - `sample_names()`: Returns a character vector of length `n` with names by randomly drawing from a name list: type = {"neutral", "female", "male", "mixed"}. Useful to anonymize scdf files
 
-``` {.r}
+```R
 names(exampleAB) <- sample_names(3)
 ```
 
 -`add_l2()`: Adds the variables from a second level 2 data frame to an scdf matched by an id variable (default is `case`).
 
-```{.r}
+```R
 Leidig2018 %>%
   add_l2(Leidig2018_l2) %>%
   hplm(update.fixed = .~. + gender + migration + ITRF_TOTAL*phaseB, 
        slope = FALSE, random.slopes = FALSE, lr.test = FALSE)
 ```
 
-- `select_phases()`: selects and recombines phases into A and B phase (equivalent to th phases argument for various functions, but useful when using %>% operators).
+- `select_phases()`: selects and recombines phases into A and B phase (equivalent to the phases argument of various functions, but useful when using %>% operators).
 
-```{.r}
+```R
 exampleA1B1A2B2 %>% 
   select_phases(A = c(1, 3), B = c(2, 4)) %>%
   overlap()
@@ -37,7 +86,7 @@ exampleA1B1A2B2 %>%
 
 - `set_dvar()`, `set_mvar()`, `set_pvar()`: Shortcuts to set dvar, mvar, or pvar in a piping script e.g. `exmpleAB_add %>% set_dvar("depression") %>% describe()`
 
-```{.r}
+```R
 exampleAB_add %>%
   set_vars(dv = "depression") %>%
   overlap()
@@ -47,32 +96,31 @@ exampleAB_add %>%
 - `check_scdf()`: Checks for the validity of an scdf object (mainly used for internal tests)
 - `convert()`: Creates an scdf syntax file from an scdf object.
 
-``` {.r}
+```R
 # Create a syntax to code the scdf exampleAB and write it into an R file
 convert(exampleAB, file = "cases.R")
 ```
 
 - `cdc`: Applies the Conservative Dual-Criterion Method (CDC; Fisher, Kelley, & Lomas, 2003) to scdf objects.
 
-``` {.r}
+```R
 cdc(Beretvas2008)
 cdc(exampleAB_decreasing, decreasing = TRUE, trend.method = "bisplit")
 ```
 
 ### Changes in functions
 
-- `subset()`: Argument `subset` changed to `filter`.
 - `overlap()`: Added Hedges-g.
 - new trend lines added to `plot.scdf()`: Koenig's bi-split / quarter intersect (lines = "trendA_bisplit") and Tukey's tri-split / Wald's slope (lines = "trendA_trisplit").
 
-``` {.r}
+```R
 plot(exampleAB_50[8], lines = "trendA_bisplit")
 plot(example_A24, lines = "trendA_trisplit")
 ```
 
 - `plot.scdf()`: Now allows for multiple lines with different line styles.
 
-``` {.r}
+```R
 plot(
   exampleAB, 
   lines = list(
