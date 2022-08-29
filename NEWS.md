@@ -1,3 +1,42 @@
+# scan 0.55
+
+## new functions
+
+- `coef()/ coefficients()`: Method for base R `coef` function for plm/hplm objects. Extracts coefficient tables from provided object.
+
+```.r
+coef(plm(exampleAB$Johanna))
+```
+
+## New features
+
+- `power_test()`: New argument `ci` provides confidence intervals for power, alpha error, and correct proportions. New arguments `binom_test_alpha, binom_test_power, binom_test_correct` provide test against a provided proportion for alpha, power, and correct proportions.
+
+```.r
+design <- design(
+  n = 1, phase_design = list(A = 6, B = 9),
+  rtt = 0.8, level = 1.0, trend = 0.05
+)
+
+power_test(
+  design, ci = 0.95, binom_test = TRUE
+)
+```
+
+- `plm()`, `hplm()`: Added contrast argument with values `"first"` or "`preceding`". Now `model = "JW"` is deprecated and identical to `model = "B&L-B", contrast = "preceding"`.  
+- `plm()`, `hplm()`: Added model `"W"`. Which shifts the measurement-time variable to start with zero. This leads to a more sensible estimation of the intercept (where the intercept depicts the estimated score at the start). `model = "W"` is now the default. Use `model = "B&L-B"` for previous defaults.
+
+## Bug fixes
+
+- solved #66: `set_vars()` working.
+- `read_scdf()` now works when cvar is not the first column.
+
+## Changes to functions
+
+- `corrected_tau()`: changed default setting of arguments to: `repeated = FALSE, continuity = FALSE`. Now the default results match the calculator developed by Tarlow.
+
+- `tau_u()`: Implemented a continuity_correction (S-1 for calculating Z)
+
 # scan 0.54.1
 
 ## Bug fixes
@@ -225,3 +264,12 @@ select_cases(exampleAB, "-Johanna")
 -   Started dropping the `SC` extension from function names e.g. `overlapSC()` becomes `overlap()`
 
 see: <https://jazznbass.github.io/scan-Book/the-scan-package.html#changes-with-version-0.50>
+
+# scan 0.40
+
+CRAN release 2019-08-11
+
+# scan 0.20
+
+CRAN release 2016-10-15
+
