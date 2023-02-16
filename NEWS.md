@@ -1,3 +1,55 @@
+# scan 0.56
+
+
+## New features
+
+- `export()`: New export for `power_test()` and `smd()` output.
+- `export()`: `tau_u()` export with new argument `case` which takes the values `"meta"` or `"all"` and new argument `select` allowing to select, reorder, and rename specific variables.
+
+- `select_cases()`: Allow for a selection based on object names (like in substitute).
+
+```r
+select_cases(exampleAB, -c(Johanna, Karolina))
+select_cases(exampleAB, Johanna, Karolina)
+v <- c("Moritz", "Jannis")
+select_cases(exampleA1B1A2B2, v)
+```
+
+- `plm()`, `hplm()`: New arguments `contrast_level` and `contrast_slope` allow for setting the contrasts for level and slope separately. Both elements can either be "first" or "preceding".
+- Speed-up `tau_u()` by 20%.
+- rewrote `as_scdf()`, `read_scdf()`. Now it is easier to import data from any file format.
+
+``` {.r}
+readODS::read_ods("filename.ods") |> as.scdf()
+openxlsx::read.xlsx("filename.xlsx") |> as.scdf()
+
+
+readODS::read_ods("filename.ods") |> 
+  as.scdf(
+    cvar = "id", 
+    pvar = "section", 
+    mvar = "day", 
+    phase_names = c("baseline", "intervention")
+  )
+  
+as.data.frame(exampleABC) |> readODS::write_ods("filename.xlsx")
+as.data.frame(exampleABC) |> openxlsx::write.xlsx("filename.xlsx")
+```
+
+## Bug fixes
+
+- `tau_u()`: Rewrote the calculation of meta analyses and confidence intervals.
+- `tau_u(), correted_tau()`: corrected a wrong calculation of the continuity correction when values where lower in phase B.
+- `tau_u()`: Implemented a new method for calculating confidence intervals based on Fisher-Z transformations (see Long, J. D., & Cliff, N. (1997). Confidence intervals for Kendall’s tau. British Journal of Mathematical and Statistical Psychology, 50(1), 31–41. <https://doi.org/10.1111/j.2044-8317.1997.tb01100.x>)
+
+## superseded function
+
+- `smooth_caes()`, `shift()`, `standardise()`, `ranks()`, `truncate_phases()`: All superseded by `transform()` and its helper functions. See details in the help files of transform and in the scan-book.
+
+## minor changes
+
+- `as.data.frane.scdf()`/`as_scdf()`: keep and retrieve scdf attributes.
+
 # scan 0.55
 
 ## new functions
@@ -49,7 +101,7 @@ power_test(
 
 ## new functions
 
-- `transform()`: Takes a scdf and calculates or modifies variables 
+- `transform()`: Takes an scdf and calculates or modifies variables 
 for each case (`transform(exampleAB, z_values = scale(values), t_values = 50 + z_values * 10)`).
 - `smd()` reporting various types of standardized mean differences.
 
@@ -262,8 +314,6 @@ select_cases(exampleAB, "-Johanna")
 ## Major changes
 
 -   Started dropping the `SC` extension from function names e.g. `overlapSC()` becomes `overlap()`
-
-see: <https://jazznbass.github.io/scan-Book/the-scan-package.html#changes-with-version-0.50>
 
 # scan 0.40
 

@@ -1,179 +1,35 @@
 #' Export scan objects to html or latex
 #'
-#' This function is in an experimental status.
-#' Export creates html files of tables or displayes them directly in the viewer pane of rstudio.
-#' When applied in rmarkdown, tables can also be created for pdf/latex output.
+#' This function is in an experimental status. Export creates html files of
+#' tables or displayes them directly in the viewer pane of rstudio. When applied
+#' in rmarkdown, tables can also be created for pdf/latex output.
 #'
 #' @param object An scdf or an object exported from a scan function.
-#' @param caption Character string with table caption. If left NA (default) a caption will be created based on the exported object.
-#' @param footnote Character string with table footnote. If left NA (default) a footnote will be created based on the exported object. 
-#' @param filename Character string with the filename. If a filename is provided
-#' the output will be written into this file.
+#' @param caption Character string with table caption. If left NA (default) a
+#'   caption will be created based on the exported object.
+#' @param footnote Character string with table footnote. If left NA (default) a
+#'   footnote will be created based on the exported object.
+#' @param filename String containing the file name. If a filename is given the 
+#' output will be written to that file.
 #' @param kable_options list with arguments passed to the kable function.
-#' @param kable_styling_options list with arguments passed to the kable_styling function.
-#' @param cols Defines which columns are included when a scdf is exported. It is either a vector
-#' with variable names or the string "main" will select the central variables.
+#' @param kable_styling_options list with arguments passed to the kable_styling
+#'   function.
+#' @param cols Defines which columns are included when exporting an scdf. It is
+#'   either a vector of variable names or the string "main" will select the
+#'   central variables.
 #' @param flip If TRUE, some objects are exported with rows and columns flipped.
-#' @param round value for the digits argument passed to the internally used round function.
+#' @param round Integer passed to the digits argument internally used to round
+#'   values.
+#' @param select A character vector containing the names of the variables to be
+#'   included. If the vector is named, the variables will be renamed
+#'   accordingly.
 #' @param ... Further Arguments passed to internal functions.
-#' @return  Returns a specif formated html (or latex).
+#' @return  Returns or displays a specially formatted html (or latex) file.
 #' @export
 
 export <- function (object, ...) {
   #warning(.opt$function_experimental_warning)
   UseMethod("export")
-}
-
-#' @rdname export
-#' @export
-export.scdf <- function(object, caption = NA, footnote = NA, filename = NA,
-                        kable_styling_options = list(), kable_options = list(),
-                        cols, ...) {
-
-  kable_options <- .join_kabel(kable_options)
-  kable_styling_options <- .join_kabel_styling(kable_styling_options)
-  
-  if (!is.na(footnote)) {
-    if (!is.null(scdf_attr(object, "info"))) 
-      footnote <- scdf_attr(object, "info")
-    if (!is.null(scdf_attr(object, "author"))) {
-      footnote <- paste(footnote, "\nAuthor:", scdf_attr(object, "author"))
-    }
-  }
-  
-  N <- cases <- length(object)
-  
-  if (is.na(caption)) 
-    caption <- paste("Single case data frame with", N, "cases")
-  kable_options$caption <- caption
-
-  if (missing(cols)) {
-    cols <- names(object[[1]])
-  }
-  if (identical(cols, "main")) {
-    cols <- c(
-      scdf_attr(object, .opt$phase), 
-      scdf_attr(object, .opt$dv), 
-      scdf_attr(object, .opt$mt)
-    )
-  }
-
-  names(object) <- .case_names(names(object), length(object))
-
-  max_row <- max(unlist(lapply(object, nrow)))
-  for (i in 1:cases) {
-    n_row <- nrow(object[[i]])
-    object[[i]][, scdf_attr(object, .opt$phase)] <- as.character(object[[i]][, scdf_attr(object, .opt$phase)])
-    if (n_row < max_row) {
-      object[[i]][(n_row + 1):max_row, names(object[[i]])] <- ""
-    }
-  }
-  rows <- max_row
-  out <- lapply(object[1:cases], function(x) x[1:rows, cols])
-  names <- lapply(out, names)
-  out <- as.data.frame(out)
-  names(out) <- unlist(names[1:cases])
-
-  kable_options$x <- out
-  kable_options$align <- rep("c", ncol(out))
-  table <- do.call(kable, kable_options)
-  kable_styling_options$kable_input <- table
-  table <- do.call(kable_styling, kable_styling_options)
-
-  case_names <- rep(ncol(out) / N, N)
-  names(case_names) <- names(object)
-  table <- add_header_above(table, case_names)
-  if (!is.na(footnote) && footnote != "") 
-    table <- footnote(table, general = footnote, threeparttable = TRUE)
-
-  # finish ------------------------------------------------------------------
-
-  if (!is.na(filename)) cat(table, file = filename)
-
-  table
-}
-
-#' @rdname export
-#' @export
-export.sc_desc <- function(object, caption = NA, footnote = NA, filename = NA,
-                           kable_styling_options = list(), 
-                           kable_options = list(), 
-                           flip = FALSE, 
-                           ...) {
- 
-  kable_options <- .join_kabel(kable_options)
-  kable_styling_options <- .join_kabel_styling(kable_styling_options)
-  
-  if (is.na(caption)) caption <- "Descriptive statistics"
-  kable_options$caption <- caption
-  
-  if (is.na(footnote)) {
-    footnote <- paste0(
-      "n = Number of measurements; ",
-      "Missing = Number of missing values; ",
-      "M = Mean; ",
-      "Median = Median; ",
-      "SD = Standard deviation; ",
-      "MAD = Median average deviation; ",
-      "Min = Minimum; ",
-      "Max = Maximum; ",
-      "Trend = Slope of dependent variable regressed on measurement-time."
-    )
-  }
-  
-  if (flip) {
-    object$descriptives[-1:-2] <- round(object$descriptives[-1:-2], kable_options$digits)
-    out <- as.data.frame(t(object$descriptives[-1]))
-    colnames(out) <- object$descriptives$Case
-    rownames(out) <- gsub("mis", "Missing", rownames(out))
-    rownames(out) <- gsub("med", "Median", rownames(out))
-    rownames(out) <- gsub("min", "Min", rownames(out))
-    rownames(out) <- gsub("max", "Max", rownames(out))
-    rownames(out) <- gsub("trend", "Trend", rownames(out))
-    rownames(out) <- gsub("\\.", " ", rownames(out))
-    out <- cbind(Parameter = rownames(out), out)
-    rownames(out) <- NULL
-    kable_options$align <- c("l", rep("c", 9))
-    kable_options$x <- out
-    table <- do.call(kable, kable_options)
-    kable_styling_options$kable_input <- table
-    table <- do.call(kable_styling, kable_styling_options)
-  }
-  
-  
-  if (!flip) {
-    n_phases <- length(object$design)
-    out <- object$descriptives
-    colnames(out) <- c("Case", "Design", rep(object$design, 9))
-    rownames(out) <- NULL
-    kable_options$align <- c("l", rep("c", 9 * n_phases))
-    kable_options$x <- out
-    table <- do.call(kable, kable_options)
-    kable_styling_options$kable_input <- table
-    table <- do.call(kable_styling, kable_styling_options)
-    table <- add_header_above(
-      table,
-      c(
-        " " = 2, "n" = n_phases,
-        "Missing" = n_phases,
-        "M" = n_phases,
-        "Median" = n_phases,
-        "SD" = n_phases,
-        "MAD" = n_phases,
-        "Min" = n_phases,
-        "Max" = n_phases,
-        "Trend" = n_phases
-      )
-    )
-  }
-  
-  if (!is.na(footnote) && footnote != "") 
-    table <- footnote(table, general = footnote, threeparttable = TRUE)
-  
-  # finish ------------------------------------------------------------------
-  
-  if (!is.na(filename)) cat(table, file = filename)
-  table
 }
 
 
@@ -393,6 +249,8 @@ export.sc_plm <- function(object, caption = NA, footnote = NA, filename = NA,
     )
   }
   
+  
+  
   if (is.na(footnote)) footnote <- F_test
   
   kable_options$x <- out
@@ -424,12 +282,13 @@ export.sc_plm <- function(object, caption = NA, footnote = NA, filename = NA,
 
 #' @rdname export
 #' @export
-export.sc_overlap <- function(object, caption = NA, footnote = NA, filename = NA,
-                           kable_styling_options = list(), 
-                           kable_options = list(), 
-                           round = 2,
-                           flip = FALSE,
-                           ...) {
+export.sc_overlap <- function(object, caption = NA, footnote = NA, 
+                              filename = NA,
+                              kable_styling_options = list(), 
+                              kable_options = list(), 
+                              round = 2,
+                              flip = FALSE,
+                              ...) {
   
   kable_options <- .join_kabel(kable_options)
   kable_styling_options <- .join_kabel_styling(kable_styling_options)
@@ -489,58 +348,10 @@ export.sc_overlap <- function(object, caption = NA, footnote = NA, filename = NA
 
 #' @rdname export
 #' @export
-export.sc_trend <- function(object, caption = NA, footnote = NA, filename = NA,
-                            kable_styling_options = list(), 
-                            kable_options = list(), 
-                            round = 2,
-                            flip = TRUE,
-                            ...) {
-  
-  kable_options <- .join_kabel(kable_options)
-  kable_styling_options <- .join_kabel_styling(kable_styling_options)
-  
-  if (is.na(caption)) caption <- c("Trend analysis")
-  kable_options$caption <- caption
-  
-  out <- object$trend
-  if (isTRUE(flip)) out <- t(out)
-  
-  tmp.rownames <- rownames(out)
-  rownames(out) <- NULL
-  for (tmp in object$formulas) {
-    tmp.rownames <- gsub(paste0(tmp, "."), "", tmp.rownames)
-  }
-  out <- cbind(Phase = tmp.rownames, out)
-  
-  kable_options$x <- out
-  table <- do.call(kable, kable_options)
-  kable_styling_options$kable_input <- table
-  table <- do.call(kable_styling, kable_styling_options)
-  
-  for (i in 1:length(object$formulas)) {
-    table <- group_rows(
-      table, object$formulas[i],
-      1 + (i - 1) * (length(object$design) + 1),
-      i * (length(object$design) + 1)
-    )
-  }
-  
-  if (!is.na(footnote) && footnote != "") 
-    table <- footnote(table, general = footnote, threeparttable = TRUE)
-  
-  # finish ------------------------------------------------------------------
-  
-  if (!is.na(filename)) cat(table, file = filename)
-  table
-}
-
-
-#' @rdname export
-#' @export
-export.sc_tauu <- function(object, caption = NA, footnote = NA, filename = NA,
-                            kable_styling_options = list(), 
-                            kable_options = list(), 
-                            ...) {
+export.sc_power <- function(object, caption = NA, footnote = NA, filename = NA,
+                           kable_styling_options = list(), 
+                           kable_options = list(), 
+                           ...) {
   
   kable_options <- .join_kabel(kable_options)
   kable_styling_options <- .join_kabel_styling(kable_styling_options)
@@ -548,24 +359,25 @@ export.sc_tauu <- function(object, caption = NA, footnote = NA, filename = NA,
   if (is.na(caption)) {
     #A <- object$design[object$phases.A]
     #B <- object$design[object$phases.B]
-    caption <- c("Overall Tau-U")#, .phases_string(A, B))
+    caption <- c("Test power in percent")#, .phases_string(A, B))
   }
   kable_options$caption <- caption
   
   if (is.na(footnote)) {
-    footnote <- paste(
-      "Method is '", object$method, 
-      "'. Analyses based on Kendall's Tau ", object$tau_method, 
-      ". ", object$ci * 100, "% CIs for tau are reported. ",
-      object$meta_method, " effect model applied for meta-analyzes.",
-      collapse = ""
-    )
+    #footnote <- paste(
+    #  "Method is '", object$method, 
+    #  "'. Analyses based on Kendall's Tau ", object$tau_method, 
+    #  ". ", object$ci * 100, "% CIs for tau are reported. ",
+    #  object$meta_method, " effect model applied for meta-analyzes.",
+    #  collapse = ""
+    #)
   }
   
-  out <- object$Overall_tau_u
-  column_names <- c("Model", "Tau", "SE", "CI lower", "CI upper", "z", "p")
-  colnames(out) <- column_names
-  out$p <- .nice_p(out$p)
+  out <- object
+  class(out) <- "data.frame"
+  #column_names <- c("Model", "Tau", "SE", "CI lower", "CI upper", "z", "p")
+  #colnames(out) <- column_names
+  #out$p <- .nice_p(out$p)
   
   
   kable_options$x <- out
@@ -583,6 +395,29 @@ export.sc_tauu <- function(object, caption = NA, footnote = NA, filename = NA,
 }
 
 
+.select <- function(df, select) {
+
+  if (identical(select, "none") || 
+      identical(select, "") ||
+      identical(select, NA) ||
+      is.null(select) ||
+      identical(select, FALSE)) return(df)
+  
+  if (!all(select %in% names(df)) && !is.numeric(select)) {
+    warning("`select` arguments has variable names that are not included in " ,
+            "the output table: valid names are: ", 
+            paste(names(df), collapse = ", "), ".")
+  }
+  df <- df[, select]
+  if (!is.null(names(select))) {
+    if (is.numeric(select)) {
+      select <-  setNames(names(df)[select], names(select))
+    }
+    select <- mapply(function(x, y) ifelse(x == "",y,x), names(select), select)
+    names(df) <- select
+  }
+  df
+}
 
 .join_kabel <- function(kable_options) {
   

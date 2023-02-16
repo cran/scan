@@ -61,7 +61,7 @@ c.scdf <- function(...) {
   combine(...)
 }
 
-#' Select a scdf
+#' Select an scdf
 #'
 #' @param x A scdf object
 #' @param i A case name from x 
@@ -90,25 +90,6 @@ c.scdf <- function(...) {
 }
 
 
-#' as_scdf
-#' Converts a data frame to an scdf object
-#'
-#' @param object A scdf object
-#'
-#' @export
-
-as_scdf <- function(object) {
-  
-  if (is.data.frame((object)))
-    object <- list(object)
-
-  if (!is.list(object))
-    stop("Object must be a data.frame or a list of data.frames.")
-  
-  attributes(object) <- .default_attributes(attributes(object)) 
-  object
-  
-}
 
 #' scdf objects
 #' Tests for objects of type "scdf"
