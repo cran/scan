@@ -2,10 +2,10 @@
 % Please edit documentation in R/convert.R
 \name{convert}
 \alias{convert}
-\title{Covert
-Converts an scdf object to a text syntax}
+\title{Convert
+Converts an scdf object into R code}
 \usage{
-convert(scdf, file = "", study_name = "study")
+convert(scdf, file = "", study_name = "study", case_name = "case", indent = 3)
 }
 \arguments{
 \item{scdf}{A single-case data frame. See \code{\link{scdf}} to learn about
@@ -13,11 +13,15 @@ this format.}
 
 \item{file}{A filename for exporting the syntax.}
 
-\item{study_name}{Character string. Name of the single case study name.}
+\item{study_name}{Character string. Name of the study object.}
+
+\item{case_name}{Character string. Name of the scdf objects.}
+
+\item{indent}{Integer. Indentation.}
 }
 \description{
-Covert
-Converts an scdf object to a text syntax
+Convert
+Converts an scdf object into R code
 }
 \examples{
 filename <- tempfile()
@@ -26,3 +30,10 @@ source(filename)
 all.equal(study, exampleABC)
 unlink(filename)
 }
+\seealso{
+Other io-functions: 
+\code{\link{read_scdf}()},
+\code{\link{write_scdf}()}
+}
+\concept{io-functions}
+\keyword{io}

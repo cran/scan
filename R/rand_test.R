@@ -82,7 +82,8 @@
 #' 
 #' @export
 rand_test <- function (data, dvar, pvar, 
-                       statistic = "Mean B-A", 
+                       statistic = c("Mean B-A", "Mean A-B", "Median B-A", 
+                                     "Median A-B", "Mean |A-B|"), 
                        number = 500, 
                        complete = FALSE, 
                        limit = 5, 
@@ -93,12 +94,20 @@ rand_test <- function (data, dvar, pvar,
                        output = NULL, 
                        seed = NULL) {
 
+  
+  check_args(
+    by_call(statistic, "rand_test")
+  )
+  statistic <- statistic[1]
+  
   if(!is.null(seed)) set.seed(seed)
   
   # set attributes to arguments else set to defaults of scdf
-  if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv) else scdf_attr(data, .opt$dv) <- dvar
-  if (missing(pvar)) pvar <- scdf_attr(data, .opt$phase) else scdf_attr(data, .opt$phase) <- pvar
-
+  if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv)
+  if (missing(pvar)) pvar <- scdf_attr(data, .opt$phase) 
+  scdf_attr(data, .opt$dv) <- dvar
+  scdf_attr(data, .opt$phase) <- pvar
+  
   data <- .prepare_scdf(data)
   
   keep <- .keep_phases(data, phases = phases)

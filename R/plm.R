@@ -91,14 +91,14 @@
 #' @export
 plm <- function(data, dvar, pvar, mvar, 
                 AR = 0, 
-                model = "W", 
+                model = c("W", "H-M", "B&L-B", "JW"),
                 family = "gaussian", 
                 trend = TRUE, 
                 level = TRUE, 
                 slope = TRUE,
-                contrast = "first",
-                contrast_level = NA,
-                contrast_slope = NA,
+                contrast = c("first", "preceding"),
+                contrast_level = c(NA, "first", "preceding"),
+                contrast_slope = c(NA, "first", "preceding"),
                 formula = NULL, 
                 update = NULL, 
                 na.action = na.omit,
@@ -107,6 +107,23 @@ plm <- function(data, dvar, pvar, mvar,
                 dvar_percentage = FALSE,
                 ...) {
   
+  check_args(
+    has_length(data, 1, 
+               "plm can not be applied to more than one case (use hplm)."),
+    not(family != "gaussian" && AR != 0, 
+        "family is not 'gaussian' but AR is set."),
+    not(family == "binomial" && is.null(var_trials),
+        "family is 'binomial' but 'var_trials' is not defined."),
+    by_call(model, "plm"),
+    by_call(contrast_level, "plm"),
+    by_call(contrast_slope, "plm"),
+    by_call(contrast, "plm")
+  )
+  
+  model <- model[1]
+  contrast <- contrast[1]
+  contrast_level <- contrast_level[1]
+  contrast_slope <- contrast_slope[1]
   
   # set defaults attributes
   if (missing(dvar)) dvar <- scdf_attr(data, .opt$dv) 
@@ -131,20 +148,17 @@ plm <- function(data, dvar, pvar, mvar,
   if (family != "gaussian") r_squared = FALSE
   
   original_attr <- attributes(data)[[.opt$scdf]]
+  #check_args(
+  #  equal(N == 1, "plm can not be applied to more than one case (use hplm)."),
+  #  not(family != "gaussian" && AR != 0, 
+  #      "family is not 'gaussian' but AR is set."),
+  #  not(family == "binomial" && is.null(var_trials),
+  #      "family is 'binomial' but 'var_trials' is not defined."),
+  #  by_call(model, "plm")
+  #  #one_of(model, c("H-M", "B&L-B", "W"))
+  #)
   
-
-  N <- length(data)
-  
-  start_check() %>%
-    check(N == 1, "Procedure could not be applied to more than one case ",
-                  "(use hplm instead).") %>%
-    check(family == "gaussian" || AR == 0, 
-           "family is not 'gaussian' but AR is set.") %>%
-    check_not(family == "binomial" && is.null(var_trials),
-               "family = 'binomial' but 'var_trials' not defined.") %>%
-    check_in(model, c("H-M", "B&L-B", "W")) %>%
-    #.check_in(contrast, c("first", "preceding")) %>%
-    end_check()
+  #model <- model[1]
   
   # formula definition ------------------------------------------------------
   

@@ -6,6 +6,7 @@
 #' 
 #' @param ... Arguments passed through to the new function.
 #' @name deprecated-functions
+#' @keywords internal
 NULL
 
 #' @rdname deprecated-functions
@@ -86,3 +87,4 @@ rankSC <- function(...) {
   .deprecated_warning("ranks", "rankSC")
   ranks(...)
 }
+

@@ -1,5 +1,23 @@
-# scan 0.56
+# scan 0.57
 
+## New fucntions
+
+- `show()`: Opens each case within an scdf in a separate viewer tab.
+- Helper functions for `transform()`: `n()`, `all_cases()`, `across_cases()`, `first_of`
+- Helper functions for `transform()`: `moving_mean()`, `moving_median()`, `local_regression()`
+- `corrected_tau()`: returns multiple cases
+- `export()`: new for `nap(), pen()`
+
+## Bug fixes
+
+- solved: `summary()` failed when one of the cases had no name
+- solved: `nap()` only report values for the first case with multiple cases.
+
+## minor
+
+- `convert()`: new arguments. indent sets the indentation. When the scdf contains only one case, no study is combined.
+
+# scan 0.56
 
 ## New features
 

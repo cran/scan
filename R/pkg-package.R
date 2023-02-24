@@ -15,6 +15,8 @@
 #' @import mblm
 #' @import methods
 #' @importFrom car Anova
+#' @importFrom utils View
+#' @keywords internal
 NULL
 
 

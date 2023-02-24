@@ -1,19 +1,8 @@
-#' Validity check for an scdf object
-#'
-#' @param object An scdf object
-#'
-#' @return TRUE or list with error and warning messages.
-#' @examples 
-#' check_scdf(exampleAB)
-#' 
-#' check_scdf(c(exampleAB, exampleABC))
-#' 
-#' @export
 
-check_scdf <- function(object) {
+check_scdf <- function(object, message = FALSE) {
   results <- .check_scdf(object)
   if (isTRUE(results)) {
-    message("No errors or warnings.")
+    if (message) message("No errors or warnings.")
     return(invisible(TRUE))
   }
   if(length(results$warnings) > 0) {
@@ -31,8 +20,8 @@ check_scdf <- function(object) {
   warnings <- character()
   
   # check class
-  if (!identical(class(object), c("scdf", "list"))) {
-    msg <- paste0("Class is not c('scdf', 'list').")
+  if (!inherits(object, "scdf")) {
+    msg <- paste0("Class is not 'scdf'.")
     errors <- c(errors, msg)
   }
   
@@ -107,6 +96,4 @@ check_scdf <- function(object) {
   return(list(errors = errors, warnings = warnings))
 
 }
-
-
 

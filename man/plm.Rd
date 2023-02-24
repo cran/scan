@@ -10,14 +10,14 @@ plm(
   pvar,
   mvar,
   AR = 0,
-  model = "W",
+  model = c("W", "H-M", "B&L-B", "JW"),
   family = "gaussian",
   trend = TRUE,
   level = TRUE,
   slope = TRUE,
-  contrast = "first",
-  contrast_level = NA,
-  contrast_slope = NA,
+  contrast = c("first", "preceding"),
+  contrast_level = c(NA, "first", "preceding"),
+  contrast_slope = c(NA, "first", "preceding"),
   formula = NULL,
   update = NULL,
   na.action = na.omit,
@@ -162,9 +162,11 @@ Measurement, 60}, 38-58.
 }
 \seealso{
 Other regression functions: 
+\code{\link{autocorr}()},
 \code{\link{corrected_tau}()},
 \code{\link{hplm}()},
-\code{\link{mplm}()}
+\code{\link{mplm}()},
+\code{\link{trend}()}
 }
 \author{
 Juergen Wilbert

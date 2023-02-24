@@ -10,7 +10,8 @@
 #'   for all phases (for each single-case). If \code{lag_max} exceeds the length
 #'   of a phase minus one, NA is returned for this cell.
 #' @author Juergen Wilbert
-#' @seealso \code{\link{trend}}, \code{\link{plm}}, \code{\link{acf}}
+#' @seealso \code{\link{acf}}
+#' @family regression functions
 #' @examples
 #' ## Compute autocorrelations for a list of four single-cases up to lag 2.
 #' autocorr(Huber2014, lag_max = 2)
@@ -36,7 +37,7 @@ autocorr <- function(data, dvar, pvar, mvar,
   data <- .prepare_scdf(data)
 
   N <- length(data)
-  case_names <- .case_names(names(data), length(data))
+  case_names <- .case_names(data)
   var_lag <- paste0("Lag ", 1:lag_max)
   
   ac <- list()

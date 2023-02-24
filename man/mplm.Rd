@@ -9,10 +9,10 @@ mplm(
   dvar,
   mvar,
   pvar,
-  model = "W",
-  contrast = "first",
-  contrast_level = NA,
-  contrast_slope = NA,
+  model = c("W", "H-M", "B&L-B", "JW"),
+  contrast = c("first", "preceding"),
+  contrast_level = c(NA, "first", "preceding"),
+  contrast_slope = c(NA, "first", "preceding"),
   trend = TRUE,
   level = TRUE,
   slope = TRUE,
@@ -83,9 +83,11 @@ print(res, std = TRUE)
 }
 \seealso{
 Other regression functions: 
+\code{\link{autocorr}()},
 \code{\link{corrected_tau}()},
 \code{\link{hplm}()},
-\code{\link{plm}()}
+\code{\link{plm}()},
+\code{\link{trend}()}
 }
 \author{
 Juergen Wilbert
