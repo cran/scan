@@ -3,15 +3,14 @@
 #' Merges variables with corresponding case names from a data.frame with an scdf
 #' file
 #'
-#' This function is mostly used in combination with the \code{\link{hplm}}
-#' function.
+#' This function is mostly used in combination with the [hplm()] function.
 #'
 #' @inheritParams .inheritParams
 #' @param data_l2 A level 2 dataset.
 #' @param cvar Character string with the name of the "case" variable in the L2
 #'   dataset (default is 'case').
 #' @return An scdf
-#' @seealso \code{\link{hplm}}
+#' @seealso [hplm()]
 #' @family data manipulation functions
 #' @keywords transform
 #' @examples
@@ -45,7 +44,7 @@ add_l2 <- function(scdf,
     if (length(id) == 1) {
       scdf[[i]] <- cbind(
         scdf[[i]], 
-        data_l2[id, -which(names(data_l2) == cvar)], 
+        data_l2[id, -which(names(data_l2) == cvar), drop = FALSE], 
         row.names = NULL
       )
     }

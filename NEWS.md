@@ -1,21 +1,43 @@
-# scan 0.57
+# scan 0.58
+
+## Shiny app added
+
+- start the app with `shinyscan()`
+- you need the following packages to run the app:
+  - `shiny`, `shinyjs`, `scplot`, `markdown`
 
 ## New fucntions
 
-- `show()`: Opens each case within an scdf in a separate viewer tab.
+- `batch_apply()`: Apply a function to each element in an scdf. Use `.` as a placeholder for the scdf case.
+
+```r
+batch_apply(exampleAB, plm(.) |> coef())
+```
+
 - Helper functions for `transform()`: `n()`, `all_cases()`, `across_cases()`, `first_of`
 - Helper functions for `transform()`: `moving_mean()`, `moving_median()`, `local_regression()`
 - `corrected_tau()`: returns multiple cases
 - `export()`: new for `nap(), pen()`
+- `c()/combine()`: new arguments to set author and info attributes of the resulting scdf (`author`, `info`)
+
+## Changes in functions
+
+- `plm()`: Print function allows to set maximum lag for autocorrelations; Overall significance Ljung_Box test is reported.
+
+```r
+plm(exampleAB$Johanna) |> print(lag_max = 5)
+```
 
 ## Bug fixes
 
 - solved: `summary()` failed when one of the cases had no name
-- solved: `nap()` only report values for the first case with multiple cases.
+- solved: `nap()` only reported values for the first case with multiple cases.
+- solved: `add_l2()` lost column name of l2 variable when l2 had only one variable.
 
 ## minor
 
 - `convert()`: new arguments. indent sets the indentation. When the scdf contains only one case, no study is combined.
+- `select_phases()`: New argument `phase_names` sets names of the recombined phases. The default `"auto"` creates combinations of the phase names automatically (e.g., `A = c("A", "B", B = "C")` results in phases `AB` and `C`).
 
 # scan 0.56
 

@@ -2,14 +2,21 @@
 % Please edit documentation in R/convert.R
 \name{convert}
 \alias{convert}
-\title{Convert
-Converts an scdf object into R code}
+\title{Convert}
 \usage{
-convert(scdf, file = "", study_name = "study", case_name = "case", indent = 3)
+convert(
+  scdf,
+  file = "",
+  study_name = "study",
+  case_name = "case",
+  inline = FALSE,
+  indent = 2,
+  silent = FALSE
+)
 }
 \arguments{
-\item{scdf}{A single-case data frame. See \code{\link{scdf}} to learn about
-this format.}
+\item{scdf}{A single-case data frame. See \code{\link[=scdf]{scdf()}} to learn about this
+format.}
 
 \item{file}{A filename for exporting the syntax.}
 
@@ -17,10 +24,16 @@ this format.}
 
 \item{case_name}{Character string. Name of the scdf objects.}
 
+\item{inline}{If TRUE, phase definition is in an online version.}
+
 \item{indent}{Integer. Indentation.}
+
+\item{silent}{If TRUE, syntax is not printed to the console}
+}
+\value{
+Returns a string (invisible).
 }
 \description{
-Convert
 Converts an scdf object into R code
 }
 \examples{

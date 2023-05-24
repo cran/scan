@@ -45,7 +45,7 @@
 
 \method{print}{sc_mplm}(x, digits = "auto", std = FALSE, ...)
 
-\method{print}{sc_nap}(x, digits = "auto", ...)
+\method{print}{sc_nap}(x, digits = "auto", nice = TRUE, ...)
 
 \method{print}{sc_outlier}(x, digits = "auto", ...)
 
@@ -57,7 +57,7 @@
 
 \method{print}{sc_pet}(x, ...)
 
-\method{print}{sc_plm}(x, ...)
+\method{print}{sc_plm}(x, lag_max = 3, ...)
 
 \method{print}{sc_pnd}(x, ...)
 
@@ -83,7 +83,7 @@
 \arguments{
 \item{x}{Object}
 
-\item{digits}{The minimum number of significant digits to be use. 
+\item{digits}{The minimum number of significant digits to be use.
 If set to "auto" (default), values are predefined.}
 
 \item{...}{Further parameters passed to the print function}
@@ -92,6 +92,9 @@ If set to "auto" (default), values are predefined.}
 publication tables.}
 
 \item{std}{If TRUE, a table with standardized estimates is included.}
+
+\item{lag_max}{Maximum lag to be reported for autocorrelation of residuals.
+Default is \code{3}. Set \code{FALSE} for no report of autocorrelations.}
 
 \item{duration}{If TRUE the duration for computation is printed.}
 
