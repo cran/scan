@@ -16,7 +16,7 @@ server <- function(input, output, session) {
 
     output$scdf_syntax <- renderPrint({
       req(inherits(my_scdf(), "scdf"))
-      do.call("convert", list(my_scdf()))
+      do.call("convert", list(my_scdf(), inline = as.logical(input$convert)))
     })
 
   })
@@ -36,6 +36,12 @@ server <- function(input, output, session) {
     ext <- tools::file_ext(input$upload$datapath)
     if (ext == "rds") {
       new <- readRDS(input$upload$datapath)
+    } else if (ext %in% c("r", "R")) {
+      new <- readLines(input$upload$datapath)
+      new <- paste0(new, collapse = "\n")
+      .tmp <- new.env()
+      eval(parse(text = new), envir = .tmp)
+      new <- .tmp$study
     } else {
       new <- read_scdf(input$upload$datapath)
     }
@@ -54,7 +60,7 @@ server <- function(input, output, session) {
     filename = function() {
       scdf <- my_scdf()
       out <- paste(
-        "scdf",
+        input$prefix_output_data,
         sprintf("%02d", length(scdf)),
         paste0(unique(scdf[[1]]$phase), collapse = ""),
         format(Sys.time(), format = "%y%m%d-%H%M%S"),
@@ -63,10 +69,13 @@ server <- function(input, output, session) {
       paste0(out, input$save_scdf_format)
     },
     content = function(file) {
+      scdf <- my_scdf()
       if (input$save_scdf_format == ".rds") 
-        saveRDS(my_scdf(), file)
+        saveRDS(scdf, file)
       if (input$save_scdf_format == ".R") 
-        convert(my_scdf(), file = file)
+        convert(scdf, file = file)
+      if (input$save_scdf_format == ".csv") 
+        write_scdf(scdf, filename = file)
     }
   )
 
@@ -82,8 +91,8 @@ server <- function(input, output, session) {
 
       call <- paste0(dvar, " = ", values)
       call <- c(call, paste0("dvar = ", deparse(dvar)))
-      if (input$mt != "") call <- c(call, paste0("mt = ", deparse(mt)))
-
+      if (input$mt != "") call <- c(call, paste0("mt = c(", input$mt, ")"))
+      
       if (input$variables != "") {
         variables <- input$variables |>
           strsplit("\n")  |>
@@ -102,9 +111,27 @@ server <- function(input, output, session) {
       call <- paste0("scdf(", call, ")")
 
       new <- call |> str2lang() |> eval()
-      if (length(my_scdf()) > 0) new <- c(my_scdf(), new)
-      my_scdf(new)
-      scdf_render()
+      if (input$remove_which == "last") {
+        if (length(my_scdf()) > 0) new <- c(my_scdf(), new)
+        my_scdf(new)
+        scdf_render()
+      } 
+      
+      if (input$remove_which == "at") {
+        at <- input$remove_at
+        if (length(my_scdf()) >= at - 1) {
+          if (at == 1) {
+            new <- c(new, my_scdf())
+          } else if (at == length(my_scdf()) + 1) {
+            new <- c(my_scdf(), new)
+          } else {
+            new <- c(my_scdf()[1:(at-1)], new, my_scdf()[at:(length(my_scdf()))])
+          }
+          my_scdf(new)
+          scdf_render() 
+        }
+      }  
+
     },
     error = function(e)
       output$scdf_summary <- renderText(
@@ -113,13 +140,24 @@ server <- function(input, output, session) {
     )
   })
 
+  # scdf: remove cases --------
   observeEvent(input$remove_case, {
-    if (length(my_scdf()) > 1) {
-      my_scdf(my_scdf()[-length(my_scdf())])
-    } else (my_scdf(NULL))
+    if (input$remove_which == "last") {
+      if (length(my_scdf()) > 1) {
+        my_scdf(my_scdf()[-length(my_scdf())])
+      } else (my_scdf(NULL))
+    }
+    
+    if (input$remove_which == "at") {
+      at <- input$remove_at
+      if (length(my_scdf()) >= at)
+        my_scdf(my_scdf()[-input$remove_at])
+    }
+    
     scdf_render()
   })
 
+  # scdf: remove all cases --------
   observeEvent(input$remove_all, {
     my_scdf(NULL)
     scdf_render()
@@ -131,16 +169,27 @@ server <- function(input, output, session) {
     out <- my_scdf()
     syntax = "scdf"
     if (input$select_cases != "") {
-      args <- list(str2lang(input$select_cases))
-      out <- do.call("select_cases", c(list(out), args))
+      call <- str2lang(paste0("select_cases(out, ", input$select_cases,")"))
+      out <- eval(call)
       syntax <- c(syntax, paste0("select_cases(",input$select_cases,")"))
-
     }
 
-    if (input$select_phases != "") {
-      out <- paste0("select_phases(out, ", input$select_phases, ")") |>
-        str2lang() |> eval()
-      syntax <- c(syntax, paste0("select_phases(", input$select_phases, ")"))
+    if (input$select_phasesA != "" || input$select_phasesB != "") {
+ 
+      out <- paste0(
+          "select_phases(out, A = c(", input$select_phasesA, "), B = c(",
+          input$select_phasesB, "))"
+        ) |>
+        str2lang() |> 
+        eval()
+      
+      syntax <- c(
+        syntax, 
+        paste0(
+          "select_phases(A = c(", input$select_phasesA, "), B = c(",
+          input$select_phasesB, "))"
+        )
+      )
     }
 
     if (input$subset != "") {
@@ -177,26 +226,42 @@ server <- function(input, output, session) {
     out
   })
 
-  output$transform_scdf <- renderPrint({
-    if(!inherits(my_scdf(), "scdf")) validate(res$msg$no_case)
-    print(transformed(), rows = 100)
-  })
-
-  output$transform_save <- downloadHandler(
+  # transform save ----
+  
+  output$transformed_save <- downloadHandler(
     filename = function() {
       scdf <- transformed()
       out <- paste(
-        "scdf",
+        input$prefix_output_transformed,
         sprintf("%02d", length(scdf)),
         paste0(unique(scdf[[1]]$phase), collapse = ""),
         format(Sys.time(), format = "%y%m%d-%H%M%S"),
         sep = "-"
       )
-      paste0(out, ".rds")
+      paste0(out, input$save_transformed_format)
     },
-    content = function(file) saveRDS(transformed(), file)
+    content = function(file) {
+      if (input$save_transformed_format == ".rds") 
+        saveRDS(transformed(), file)
+      if (input$save_transformed_format == ".R") 
+        convert(transformed(), file = file)
+      if (input$save_transformed_format == ".csv") 
+        write_scdf(transformed(), filename = file)
+    }
   )
+  
+  # transform output ------
+  
+  output$transform_scdf <- renderPrint({
+    if(!inherits(my_scdf(), "scdf")) validate(res$msg$no_case)
+    print(transformed(), rows = 100)
+  })
 
+  output$transform_html <- renderUI({
+    if(!inherits(my_scdf(), "scdf")) validate(res$msg$no_case)
+    export(transformed(), caption = "") |> HTML()
+  })
+  
   # stats -----
 
   calculate_stats <- reactive({
@@ -234,14 +299,6 @@ server <- function(input, output, session) {
     } else call <- "print(results)"
 
     str2lang(call) |> eval()
-  })
-
-
-  observeEvent(input$stats_help, {
-    link <- paste0(
-      "https://jazznbass.github.io/scan/reference/", input$func, ".html"
-    )
-    shinyjs::js$openURL(link)
   })
 
   output$stats_syntax <- renderPrint({
@@ -342,20 +399,64 @@ server <- function(input, output, session) {
     call
   })
 
-
+  # stats save ------
+  
+  output$stats_save <- downloadHandler(
+    
+    filename = function() {
+      scdf <- transformed()
+      out <- paste(
+        input$prefix_output_stats, input$func,
+        sprintf("%02d", length(scdf)),
+        paste0(unique(scdf[[1]]$phase), collapse = ""),
+        format(Sys.time(), format = "%y%m%d-%H%M%S"),
+        sep = "-"
+      )
+      
+      if (input$stats_out == "Html") out <- paste0(out, ".html")
+      if (input$stats_out == "Text") out <- paste0(out, ".txt")
+      out
+    },
+    content = function(file) {
+      
+      if (input$stats_out == "Text") {
+        results <- calculate_stats()
+        print_args <- input$stats_print_arguments
+        if (print_args != "") {
+          print_args <- paste0(", ", print_args)
+          call<- paste0("print(results, ", print_args, ")")
+        } else call <- "print(results)"
+        call <- paste0("capture.output(", call, ")")
+        writeLines(str2lang(call) |> eval(), con = file)
+      }
+      
+      if (input$stats_out == "Html") {
+        results <- calculate_stats()
+        print_args <- input$stats_print_arguments
+        if (print_args != "") {
+          print_args <- paste0(", ", print_args)
+          call<- paste0("export(results, ", print_args, ")")
+        } else {
+          call <- "export(results)"
+        }
+        out <- str2lang(call) |> eval()
+        kableExtra::save_kable(out, file)
+        #writeLines(out, con = file)
+      }
+      
+    }
+  )
+  
   # plot -----
-
-  observeEvent(input$plot_help, {
-    link <- "https://jazznbass.github.io/scplot/reference/index.html"
-    shinyjs::js$openURL(link)
-  })
 
   render_plot <- reactive({
     req(inherits(my_scdf(), "scdf"))
     call <- paste0("scplot(transformed())")
     if (trimws(input$plot_arguments) != "") {
+      plot_args <- trimws(input$plot_arguments)
+      plot_args <- gsub("\n+", "\n", plot_args)
       call <- paste0(
-        call, "%>% ", gsub("\n", " %>% ", trimws(input$plot_arguments))
+        call, "%>% ", gsub("\n", " %>% ", plot_args)
       )
     }
     call <- paste0("print(",call,")")
@@ -404,7 +505,7 @@ server <- function(input, output, session) {
     filename = function() {
       scdf <- transformed()
       out <- paste(
-        "scplot",
+        input$prefix_output_plot,
         sprintf("%02d", length(scdf)),
         paste0(unique(scdf[[1]]$phase), collapse = ""),
         format(Sys.time(), format = "%y%m%d-%H%M%S"),
@@ -432,4 +533,10 @@ server <- function(input, output, session) {
     })
   })
 
+  # quit app -----
+  observeEvent(input$navpage, {
+    if (input$navpage == "Quit") {
+      stopApp()
+    }
+  })
 }

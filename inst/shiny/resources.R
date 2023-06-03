@@ -1,34 +1,20 @@
 errors <- c()
 
-if (!requireNamespace("scplot", quietly = TRUE)) {
-  errors <- c(errors, paste0("- You need to install the 'scplot' package to ",
-  "run this app with install.packages('scplot')\n"))
-} 
-
-if (!requireNamespace("shinyjs", quietly = TRUE)) {
-  errors <- c(errors, paste0("- You need to install the 'shinyjs' package ",
-    "to run this app with install.packages('shinyjs')\n"))
-}
-
-if (!requireNamespace("htmltools", quietly = TRUE)) {
-  errors <- c(errors, paste0("- You need to install the 'htmltools' package ",
-        "to run this app with install.packages('htmltools')\n"))
-}
-
-if (!requireNamespace("markdown", quietly = TRUE)) {
-  errors <- c(errors, paste0("- You need to install the 'markdown' package ",
-      "to run this app with install.packages('markdown')\n"))
-}
-
 if (length(errors) > 0) stop(errors)
 
 suppressPackageStartupMessages({
-library(shinyjs)
-library(htmltools)
-library(markdown)
+library(scan)
 library(scplot)
 library(shiny)
 })
+
+options(
+  scan.export.kable_styling = list(
+    bootstrap_options = c("striped", "condensed"), 
+    full_width = FALSE,
+    position = "left"
+  )
+)
 
 res <- list()
 
@@ -93,9 +79,7 @@ res$choices$fn_stats <- c(
   "Outlier analysis" = "outlier"
 )
 
-#res$choices$fn_plot <- c("scplot" = "scplot", "plot" = "plot.scdf")
-
-res$placeholder$values <- "To creat a new case, start by entering scores here. E.g. \nA = 1,2,3,4,3, \nB = 7,6,7,8,7,6"
+res$placeholder$values <- "Enter values here to create a new case. E.g. \nA = 1,2,3,4,3 \nB = 7,6,7,8,7,6"
 
 res$placeholder$transform <- 'e.g.
 values = scale(values)
@@ -104,7 +88,7 @@ values2 = values - max(values[phase=="A"])
 across_cases(values2 = scale(values)
 '
 
-res$placeholder$plot_arguments <- '(choose one or more from the templates below and experiment with the syntax here.)
+res$placeholder$plot_arguments <- '(choose one or more of the templates below and experiment with the syntax here.)
 '
 
 res$placeholder$mt <- "(optional, e.g. 1,2,4,6,7,8,9,12,13)"
@@ -133,7 +117,7 @@ You can:
 
 The basic procedure is:
 
-1. Choose or create an scdf (Single Case Data Frame) in the 'scdf' tab.
+1. Choose or create an scdf (Single Case Data Frame) in the 'Data' tab.
 2. Optionally refine the scdf in the 'Transform' tab (e.g. select cases, recombine phases)
 3. Analyse the data in the 'Stats' tab.
 4. Create a plot in the 'Plot' tab.
@@ -153,41 +137,25 @@ You can:
 
 res$msg$no_case <-
 "There is no case defined yet.
-Please define a case on the 'scdf' tab first.
+Please define a case on the 'Data' tab first.
 "
 
-res$help_page <- "
-#### Welcome to ***shiny scan***!
-
-*Shiny-scan* is a graphical surface for *scan* (Single-Case Data Analysis). *scan* is an R package.
-
-The basic procedure is:
-
-1. Choose/ create a single case file in the **scdf tab**.
-2. Optionally refine the case in the **Transform tab** (select cases, recombine phases, etc.)
-3. Analyse the data in the **Stats tab**.
-4. Create a plot in the **Plot tab**.
-
-Analysis and plots are based on the scdf after any changes from the **Transform tab**.
-
-Here are helpful links:
-
-[Help pages for scan](https://jazznbass.github.io/scan/)
-
-[Online book for single case analysis with scan](https://jazznbass.github.io/scan-Book/)
-
-[Help pages for scplot](https://jazznbass.github.io/scplot/)
-
-
-Have fun!
-"
-
-# define js function for opening urls in new tab/window
-res$java$window.open <- "
-shinyjs.openURL = function(url) {
-  window.open(url,'_blank');
-}
-"
+res$help_page <- structure(
+  "<h4 id=\"welcome-to-shiny-scan\">Welcome to <em><strong>shiny scan</strong></em>!</h4>
+  <p><em>Shiny-scan</em> is a graphical surface for <em>scan</em> (Single-Case Data Analysis). <em>scan</em> is an R package.</p>
+  <p>The basic procedure is:</p>\n<ol>
+  <li>Choose/ create a single case file in the <strong>Data</strong> tab.</li>
+  <li>Optionally refine the case in the <strong>Transform tab</strong> (select cases, recombine phases, etc.)</li>
+  <li>Analyse the data in the <strong>Stats tab</strong>.</li>
+  <li>Create a plot in the <strong>Plot tab</strong>.</li>\n</ol>
+  <p>Analysis and plots are based on the scdf after any changes from the <strong>Transform tab</strong>.</p>
+  <p>Here are helpful links:</p>
+  <p><a href=\"https://jazznbass.github.io/scan/\">Help pages for scan</a></p>
+  <p><a href=\"https://jazznbass.github.io/scan-Book/\">Online book for single case analysis with scan</a></p>
+  <p><a href=\"https://jazznbass.github.io/scplot/\">Help pages for scplot</a></p>
+  <p>Have fun!</p>",
+  html = TRUE, class = c("html", "character")
+)
 
 ### little help-functions
 

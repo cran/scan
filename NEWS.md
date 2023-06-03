@@ -1,3 +1,7 @@
+# scan 0.59.0
+
+- `describe()`: now works correctly for duplicated phase names.
+
 # scan 0.58
 
 ## Shiny app added

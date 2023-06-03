@@ -4,8 +4,19 @@
 \alias{shinyscan}
 \title{A Shiny app for scan}
 \usage{
-shinyscan()
+shinyscan(quiet = TRUE, ...)
+}
+\arguments{
+\item{quiet}{If TRUE (default) does not report shiny messages in the console.}
+
+\item{\dots}{Further arguments passed to the \code{shiny::runApp()} function.}
 }
 \description{
 Run a Shiny app with most of the scan functions.
+}
+\details{
+This function launches a shiny application.
+You need to have \code{scplot} and \code{shiny} installed.
+These packages are suggested but not necessarily installed along with scan.
+\code{shinyscan()} will ask to install missing packages.
 }
