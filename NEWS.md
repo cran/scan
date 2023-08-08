@@ -1,6 +1,27 @@
+# scan 0.60.0
+
+## New function
+
+- `ird()`: Robust improvement rate difference as formulated by Postejovski (2019).
+
+## Changes
+
+- `pand()`: Rewrote function. New argument `method` allows to apply the sorting algorithm proposed in Parker 2007 and `method = "minimum"` applies the exact method provided by Pustejovski in 2019. Furthermore, the tau test was replaced with a X Squared and a Fisher exact test.
+- `corrected_tau`: Report results with warning when all phase A data are identical; new argument tau_method = "a" to switch to Kendall's tau-a.
+- `export()`: new for `pand()`.
+- New example datasets: Tarlow2017, Parker2011b, Parker2009, Parker2007
+
+## Shiny scan
+
+- Added power-analyses
+- Added settings
+- Extended save options
+- Various changes and optimizations of the ui
+
 # scan 0.59.0
 
 - `describe()`: now works correctly for duplicated phase names.
+- shiny-app no longer depends on `shinyjs` and `markdown`. `shinyscan()` asks if missing packages `scplot` and `shiny` should be installed automatically. 
 
 # scan 0.58
 
@@ -84,7 +105,7 @@ as.data.frame(exampleABC) |> openxlsx::write.xlsx("filename.xlsx")
 
 - `tau_u()`: Rewrote the calculation of meta analyses and confidence intervals.
 - `tau_u(), correted_tau()`: corrected a wrong calculation of the continuity correction when values where lower in phase B.
-- `tau_u()`: Implemented a new method for calculating confidence intervals based on Fisher-Z transformations (see Long, J. D., & Cliff, N. (1997). Confidence intervals for Kendall’s tau. British Journal of Mathematical and Statistical Psychology, 50(1), 31–41. <https://doi.org/10.1111/j.2044-8317.1997.tb01100.x>)
+- `tau_u()`: Implemented a new method for calculating confidence intervals based on Fisher-Z transformations (see Long, J. D., & Cliff, N. (1997). Confidence intervals for Kendall’s tau. British Journal of Mathematical and Statistical Psychology, 50(1), 31-41.
 
 ## superseded function
 

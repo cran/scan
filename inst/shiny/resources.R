@@ -18,6 +18,8 @@ options(
 
 res <- list()
 
+# choices ------
+
 res$choices <- list()
 examples <- data(package = "scan")$results[, 3]
 filter <- startsWith(examples,"Grosche2014") | 
@@ -52,6 +54,13 @@ set_xlabel("Session", color = "darkred")',
 
 )
 
+res$choices$scplot_templates_annotate <- c(
+  "",
+  "Marks" = 'add_marks(case = "all", position = \"values < mean(values)\", shape = 16, size = 2)',
+  "Text" = 'add_text("Hallo", case = 1, x = 5, y = 20)',
+  "Arrow" = 'add_arrow(case = 1, 2, 70, 6, 55, color = "darkred")'
+)  
+
 themes <- names(scplot:::.scplot_themes)
 
 for(i in seq_along(themes)) {
@@ -74,10 +83,38 @@ res$choices$fn_stats <- c(
   "Percent exceeding the median" = "pem",
   "Percent exceeding the trend" = "pet",
   "Percentage of all non-overlapping data" = "pand",
+  "Improvement rate difference" = "ird",
   "Nonoverlap of all Pairs" = "nap",
   "Randomization test" = "rand_test",
   "Outlier analysis" = "outlier"
 )
+
+.name <- function(x, at, label) {
+  names(x)[which(x == at)] <- label
+  x
+}
+
+
+res$choices$pt_method <- names(scan:::.opt$mc_fun)  |> 
+  setNames(names(scan:::.opt$mc_fun)) |> 
+  .name("plm_level", "Regression (level effect)") |> 
+  .name("plm_slope", "Regression (slope effect)") |> 
+  .name("plm_poisson_level", "Regression (level effect; frequencies)") |> 
+  .name("plm_poisson_slope", "Regression (slope effect; frequencies)") |> 
+  .name("hplm_level", "Multilevel-regression (level effect)") |> 
+  .name("hplm_slope", "Multilevel-regression (slope effect)") |> 
+  .name("tauU", "Tau-U (trend A)") |>
+  .name("tauU_slope", "Tau-U (trend A and B)") |>
+  .name("tauU_meta", "Metaanalysis Tau-U (trend A)") |>
+  .name("tauU_slope_meta", "Metaanalysis Tau-U (trend A and B)") |>
+  .name("base_tau", "Baseline corrected tau") |>
+  .name("rand", "Randomization test") |> 
+  .name("rand_decrease", "Randomization test (decreasing)")
+
+
+
+
+# placeholder ----
 
 res$placeholder$values <- "Enter values here to create a new case. E.g. \nA = 1,2,3,4,3 \nB = 7,6,7,8,7,6"
 
@@ -97,12 +134,36 @@ res$placeholder$variables <-
 "(optional, e.g., depression = 1,4,3,5,6,5,7
 separate multiple variables with linebreaks)"
 
+res$placeholder$pt <- "Power calculation may take some time. Click 'Run' to start calculation."
+
+# div ------
+
+res$div$settings <- paste0(
+  "background-color:#f0f0f0; ",
+  "border: 1px solid black; border-radius: 5px; ",
+  "padding-left: 10px; padding-right: 10px; ",
+  "padding-top: 0px; padding-bottom: 0px; "
+)
+
+res$div$pt <- paste0(
+  "background-color:#f0f0f0; ",
+  "border: 1px solid black; border-radius: 5px; ",
+  "padding-left: 5px; padding-right: 5px; ",
+  "padding-top: 0px; padding-bottom: 0px; "
+)
+
+# error ----
+
 res$error_msg$invalid_case <- "Sorry!
 The last case you tried to add didn't have a valid case definition."
 
 res$error_msg$plot <- "Sorry!
 The plot arguments are not valid."
 
+res$error_msg$scdf_save <- "Sorry!
+The last file you saved is corrupt. Did you forget to add a case before saving?"
+
+# msg ----
 
 res$msg$startup <-
 "Welcome to 'shiny scan'!
