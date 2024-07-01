@@ -38,7 +38,9 @@ tau_u(
   select = "auto",
   kable_styling_options = list(),
   kable_options = list(),
-  meta = TRUE,
+  meta = FALSE,
+  round = 3,
+  decimals = 3,
   ...
 )
 }
@@ -114,6 +116,11 @@ function.}
 
 \item{meta}{If TRUE, the results of the meta analysis will be exported. If
 FALSE, each single-case is exported.}
+
+\item{round}{Integer passed to the digits argument internally used to round
+values.}
+
+\item{decimals}{Decimal places that are reported.}
 }
 \value{
 \item{table}{A data frame containing statistics from the Tau-U

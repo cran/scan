@@ -1,5 +1,11 @@
 .onAttach <- function(lib, pkg, ...) {
-  packageStartupMessage(opt("startup_message"))
+  packageStartupMessage(
+    "\033[34m", 
+    opt("startup_message"),
+    "\033[31m",
+    opt("tip")[[sample(1:length(opt("tip")), 1)]]
+  )
+  
 }	
 
 .onLoad <- function(lib, pkg, ...) {
@@ -15,6 +21,7 @@
     scan.print.scdf.name = TRUE,
     scan.plot.style = "grid",
     scan.deprecated.warning = TRUE,
+    scan.export.engine = "kable",
     scan.export.kable = list(digits = 2, linesep ="", booktab = TRUE),
     scan.export.kable_styling = list(
       bootstrap_options = c("bordered", "condensed"), 

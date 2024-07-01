@@ -8,7 +8,7 @@
 #'   applied.
 #' @param continuity If TRUE applies a continuity correction for calculating p
 #' @param repeated If TRUE applies the repeated median method for calculating
-#'   slope and intercept ([mblm()])
+#'   slope and intercept.
 #' @param tau_method Character with values "a" or "b" (default) indicating
 #'   whether Kendall Tau A or Kendall Tau B is applied.
 #' @details This method has been proposed by Tarlow (2016). The baseline data
@@ -38,8 +38,19 @@ corrected_tau <- function(data, dvar, pvar, mvar,
                           alpha = 0.05, 
                           continuity = FALSE, 
                           repeated = FALSE,
-                          tau_method = "b") {
+                          tau_method = c("b", "a")) {
   
+  # validity check ----
+  check_args(
+    by_call(tau_method, "corrected_tau"),
+    within(alpha, 0, 1),
+    is_logical(continuity),
+    is_logical(repeated)
+  )
+  
+  tau_method <- tau_method[1]
+
+  # prepare scdf ----
   if (missing(dvar)) dvar <- dv(data) else dv(data) <- dvar
   if (missing(pvar)) pvar <- phase(data) else phase(data) <- pvar
   if (missing(mvar)) mvar <- mt(data) else mt(data) <- mvar

@@ -5,7 +5,6 @@
 #'
 #' @name scan-package
 #' @aliases scan-package scan
-#' @docType package
 #' @author Juergen Wilbert \[aut, cre\]
 #' @keywords package
 #' @import nlme
@@ -15,10 +14,11 @@
 #' @import kableExtra
 #' @import mblm
 #' @import methods
+#' @import gt
 #' @importFrom car Anova
 #' @importFrom utils install.packages read.csv
 #' @keywords internal
-NULL
+"_PACKAGE"
 
 
 

@@ -7,6 +7,7 @@ export.sc_desc <- function(object,
                            kable_styling_options = list(), 
                            kable_options = list(), 
                            flip = FALSE, 
+                           round = 2,
                            ...) {
   
   kable_options <- .join_kabel(kable_options)
@@ -14,7 +15,6 @@ export.sc_desc <- function(object,
   
   if (is.na(caption)) caption <- "Descriptive statistics"
 
-  
   if (is.na(footnote)) {
     footnote <- c(
       "n = Number of measurements",
@@ -29,8 +29,11 @@ export.sc_desc <- function(object,
     )
   }
   
+  object$descriptives[-1:-2] <- round(
+    object$descriptives[-1:-2], round
+  )
+  
   if (flip) {
-    object$descriptives[-1:-2] <- round(object$descriptives[-1:-2], kable_options$digits)
     out <- as.data.frame(t(object$descriptives[-1]))
     colnames(out) <- object$descriptives$Case
     rownames(out) <- gsub("mis", "Missing", rownames(out))
@@ -46,7 +49,8 @@ export.sc_desc <- function(object,
       kable_options, 
       kable_styling_options, 
       caption = caption,
-      footnote = footnote
+      footnote = footnote,
+      ...
     )
   }
   
@@ -55,29 +59,44 @@ export.sc_desc <- function(object,
     n_phases <- length(object$design)
     out <- object$descriptives
     colnames(out) <- c("Case", "Design", rep(object$design, 9))
+    spannerpos <- 3 + (0:9 * n_phases)
     
     table <- .create_table(
       out, 
       kable_options, 
       kable_styling_options, 
       caption = caption,
-      footnote = footnote
+      footnote = footnote,
+      spanner = list(
+        "n" = spannerpos[1]:(spannerpos[1] + n_phases - 1),
+        "Missing" = spannerpos[2]:(spannerpos[2] + n_phases - 1),
+        "M" = spannerpos[3]:(spannerpos[3] + n_phases - 1),
+        "Median" = spannerpos[4]:(spannerpos[4] + n_phases - 1),
+        "SD" = spannerpos[5]:(spannerpos[5] + n_phases - 1),
+        "MAD" = spannerpos[6]:(spannerpos[6] + n_phases - 1),
+        "Min" = spannerpos[7]:(spannerpos[7] + n_phases - 1),
+        "Max" = spannerpos[8]:(spannerpos[8] + n_phases - 1),
+        "Trend" = spannerpos[9]:(spannerpos[9] + n_phases - 1)
+      ),
+      ...
     )
     
-    table <- add_header_above(
-      table,
-      c(
-        " " = 2, "n" = n_phases,
-        "Missing" = n_phases,
-        "M" = n_phases,
-        "Median" = n_phases,
-        "SD" = n_phases,
-        "MAD" = n_phases,
-        "Min" = n_phases,
-        "Max" = n_phases,
-        "Trend" = n_phases
+    if (getOption("scan.export.engine") == "kable") {
+      table <- add_header_above(
+        table,
+        c(
+          " " = 2, "n" = n_phases,
+          "Missing" = n_phases,
+          "M" = n_phases,
+          "Median" = n_phases,
+          "SD" = n_phases,
+          "MAD" = n_phases,
+          "Min" = n_phases,
+          "Max" = n_phases,
+          "Trend" = n_phases
+        )
       )
-    )
+    }
   }
   
   # finish ------------------------------------------------------------------

@@ -9,6 +9,7 @@ export.sc_hplm <- function(object, caption = NA, footnote = NA, filename = NA,
                            kable_options = list(), 
                            round = 2,
                            nice = TRUE,
+                           casewise = FALSE,
                            ...) {
   
   kable_options <- .join_kabel(kable_options)
@@ -21,16 +22,6 @@ export.sc_hplm <- function(object, caption = NA, footnote = NA, filename = NA,
     )
   }
   
-  summary_model <- summary(object$hplm)
-  if (object$model$ICC) {
-    ICC <- sprintf(
-      "<i>ICC</i> = %.3f, <i>L</i> = %.1f, <i>p</i> = %.3f", 
-      object$ICC$value, object$ICC$L, object$ICC$p
-    )
-  } else {
-    ICC <- ""
-  }
-  
   footnote <- c(
     paste0("Estimation method ", object$model$estimation.method),
     paste0("Slope estimation method: ", object$model$interaction.method),
@@ -38,18 +29,27 @@ export.sc_hplm <- function(object, caption = NA, footnote = NA, filename = NA,
     paste0(object$N, " cases")
   )
   
+  if (casewise) {
+    out <- .export_casewise(
+      object, caption, footnote, filename ,
+      kable_styling_options, 
+      kable_options, 
+      round,
+      ...
+    )
+    return(out)
+  }
+  
+  summary_model <- summary(object$hplm)
+  
   out <- as.data.frame(summary(object$hplm)$tTable)
-  
   row.names(out) <- .plm.row.names(row.names(out), object)
-  
   colnames(out) <- c("B", "SE", "df", "t", "p")
   
   md <- data.frame(
     "SD" = round(as.numeric(VarCorr(object$hplm)[, "StdDev"]), 3)
   )
-  rownames(md) <- names(VarCorr(object$hplm)[, 2])
-  
-  row.names(md) <- .plm.row.names(row.names(md), object)
+  rownames(md) <- .plm.row.names(names(VarCorr(object$hplm)[, 2]), object)
   
   if (object$model$lr.test) {
     if (is.null(object$LR.test[[1]]$L.Ratio)) {
@@ -111,24 +111,59 @@ export.sc_hplm <- function(object, caption = NA, footnote = NA, filename = NA,
   }
   
   table <- .create_table(
-    out, 
-    kable_options, 
-    kable_styling_options, 
+    out,
+    kable_options,
+    kable_styling_options,
     caption = caption,
-    footnote = footnote
+    footnote = footnote,
+    row_group = list(
+      "Fixed effects" = 1: nrow_out,
+      "Random effects" = (nrow_out + 1) : (nrow(out) - 3),
+      "Model" = (nrow(out) - 2) : nrow(out)
+    )
   )
   
-  table <- table |> 
-    #pack_rows("Fixed effects", 1, nrow_out, indent = FALSE) |> 
-    pack_rows("\nRandom effects", nrow_out + 1, nrow(out), indent = FALSE) |> 
-    pack_rows("\nModel", nrow(out) - 2, nrow(out), indent = FALSE) |> 
-    #row_spec(nrow_out + nrow(md) + 1, hline_after = TRUE) |> 
-    row_spec(nrow_out, hline_after = TRUE)
-  
-  # finish ------------------------------------------------------------------
-  
+  if (getOption("scan.export.engine") == "kable") {
+    table <- table |>
+      #pack_rows("Fixed effects", 1, nrow_out, indent = FALSE) |>
+      pack_rows("\nRandom effects", nrow_out + 1, nrow(out), indent = FALSE) |>
+      pack_rows("\nModel", nrow(out) - 2, nrow(out), indent = FALSE) |>
+      #row_spec(nrow_out + nrow(md) + 1, hline_after = TRUE) |>
+      row_spec(nrow_out, hline_after = TRUE)
+  }
+      
   if (!is.na(filename)) .save_export(table, filename)
   
   table
   
+}
+
+.export_casewise <- function(object, caption = NA, footnote = NA, filename = NA,
+                             kable_styling_options = list(), 
+                             kable_options = list(), 
+                             round = 2,
+                             ...) {
+  
+  out <- coef(object, casewise = TRUE)
+  
+  if (getOption("scan.export.engine") == "kable") {
+    table <- .create_table(
+      out,
+      kable_options,
+      kable_styling_options,
+      caption = caption,
+      footnote = footnote
+    )
+  }
+  
+  if (getOption("scan.export.engine") == "kable") {
+    table <- export_table(
+      out, title = caption, footnote = footnote, 
+      decimals = round
+    )
+  }
+
+  if (!is.na(filename)) .save_export(table, filename)
+  
+  table
 }

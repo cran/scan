@@ -108,3 +108,39 @@ overlapSC <- function(...) {
   .deprecated_warning("overlap", "overlapSC")
   overlap(...)
 }
+
+#' @rdname deprecated-functions
+#' @export
+randSC <- function(...) {
+  .deprecated_warning("rand_test", "randSC")
+  rand_test(...)
+}
+
+#' @rdname deprecated-functions
+#' @export
+rand.test <- function(...) {
+  .deprecated_warning("rand_test", "rand.test")
+  rand_test(...)
+}
+
+#' @rdname deprecated-functions
+#' @export
+autocorrSC <- function(...) {
+  .deprecated_warning("autocorr", "autocorrSC")
+  autocorr(...)
+}
+
+#' @rdname deprecated-functions
+#' @export
+rciSC <- function(...) {
+  rci(...)
+}
+
+#' @rdname deprecated-functions
+#' @export
+outlierSC <- function(...) {
+  .deprecated_warning("outlier", "outlierSC")
+  outlier(...)
+}
+
+

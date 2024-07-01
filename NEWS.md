@@ -1,3 +1,33 @@
+# scan 0.61.0
+
+## Solved bugs
+
+- Corrected the name of the level-effect predictor for regressions when the phase variable is not named "phase".
+
+## New
+
+- Tip-of-the-day like message at startup.
+- Mulitple improvements of the Shiny app (try out with `shinyscan()`)
+- new output engine for rendering html export based on gtable. Set `options(scan.export.engine = "gt")`. This engine allows to export tables into docx format: `overlap(exampleAB) |> export(file = "test.docx", flip = TRUE)`.
+- new export functions for `pem()`, `pet()`, `pnd()`, and `summary()` (either `summary(exampleAB) |> export()` or `export(exampleAB, summary = TRUE)`)
+
+## Changes
+
+- `rci()`: removed the Hageman et al. method as it is not appropriate for single-cases in the current implementation.
+- `scdf()`: New argument `phase_starts()`. Which defines the measurement times of the start of each phase. `phase_starts = list(A = 1, B = 10, C = 15)`. It throws an error when a phase start is defined where no corresponding measurement-time exists. `phase_starts` is a generalization of `B_start`.
+- `rand_test()`: New option for `statistic`: `SMD` calculates the standardized mean difference as Hedge's g with Durlak correction. `W-test` computes Wilcoxon tests and compares average W statistics. `T-test` computes T-tests and compares average t-Values. `NAP` and `NAP decreasing` for Non-overlap of all pairs.
+- `nap()`: added Cohen's d and R-Squared effects.
+- `export()`: `select` argument for `nap`
+- `coef.sc_hplm()`: new `casewise` argument. If set TRUE, returns the effect estimations casewise.
+- `print.sc_hplm()`: new `casewise` argument. If set TRUE, returns the effect estimations casewise.
+- `export.sc_hplm()`: new `casewise` argument. If set TRUE, returns the effect estimations casewise.
+- `export.scdf()`: new `summary` argument. If TRUE, returns a summary.
+- `hplm()`: new arguments `random_trend`, `random_level`, and `random_slope` to selectively add respective random slope effects to the model.
+
+## New examples
+
+- `Parker2009b`
+
 # scan 0.60.0
 
 ## New function
@@ -16,7 +46,7 @@
 - Added power-analyses
 - Added settings
 - Extended save options
-- Various changes and optimizations of the ui
+- Various changes and optimization of the ui
 
 # scan 0.59.0
 
