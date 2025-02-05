@@ -14,8 +14,13 @@
 #'   newvariable`).
 #' @param na.action Defines how to deal with missing values.
 #' @param ... Further arguments passed to the [lm()] function.
-#' @return \item{model}{Character string from function call (see arguments
-#' above).} \item{full.model}{Full regression model list.}
+#' @return 
+#'  |  |  |
+#'  | --- | --- |
+#'  | `model` | Character string from function call (see arguments above). |
+#'  | `contrast` | List with contrast definitions. |
+#'  | `full.model` | Full regression model list. |
+#'  | `formula` | 	Formula of the mplm model. | 
 #' @author Juergen Wilbert
 #' @family regression functions
 #' @examples
@@ -41,10 +46,10 @@ mplm <- function(data, dvar, mvar, pvar,
                  ...) {
  
   check_args(
-    by_call(model, "mplm"),
-    by_call(contrast, "mplm"),
-    by_call(contrast_level, "mplm"),
-    by_call(contrast_slope, "mplm")
+    by_call(model),
+    by_call(contrast),
+    by_call(contrast_level),
+    by_call(contrast_slope)
   )
   model <- model[1]
   contrast <- contrast[1]

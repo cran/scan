@@ -56,7 +56,7 @@ study <- c(
 )
 plot(study)
 
-Huber2014$Berta \%>\% 
+Huber2014$Berta |>
 transform(
   "compliance (moving median)" = moving_median(compliance),
   "compliance (moving mean)" = moving_mean(compliance),
@@ -73,6 +73,7 @@ Other data manipulation functions:
 \code{\link{moving_median}()},
 \code{\link{outlier}()},
 \code{\link{ranks}()},
+\code{\link{rescale}()},
 \code{\link{scdf}()},
 \code{\link{select_cases}()},
 \code{\link{set_vars}()},

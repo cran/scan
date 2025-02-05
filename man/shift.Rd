@@ -30,8 +30,8 @@ ex <- shift(example_A24, value = -1996)
 plm(ex)
 
 # Please use transform instead:
-example_A24 \%>\%
-  transform(year = year - 1996) \%>\%
+example_A24 |>
+  transform(year = year - 1996) |>
   plm()
 }
 \seealso{
@@ -43,6 +43,7 @@ Other data manipulation functions:
 \code{\link{moving_median}()},
 \code{\link{outlier}()},
 \code{\link{ranks}()},
+\code{\link{rescale}()},
 \code{\link{scdf}()},
 \code{\link{select_cases}()},
 \code{\link{set_vars}()},

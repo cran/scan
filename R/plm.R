@@ -4,7 +4,7 @@
 #' McKean, 2000).
 #'
 #' @inheritParams .inheritParams
-#' @param AR Maximal lag of autoregression. Modeled based on the
+#' @param AR Maximal lag of autoregression. Modelled based on the
 #'   Autoregressive-Moving Average (ARMA) function.  When AR is set, the family
 #'   argument must be set to `family = "gaussian"`.
 #' @param family Set the distribution family. Defaults to a gaussian
@@ -78,16 +78,16 @@
 #' plm(dat, slope = FALSE, trend = FALSE, contrast = "preceding")
 #'
 #' ## A poisson regression
-#' example_A24 %>%
+#' example_A24 |>
 #'   plm(family = "poisson")
 #'
 #' ## A binomial regression (frequencies as dependent variable)
 #' plm(exampleAB_score$Christiano, family = "binomial", var_trials = "trials")
 #'
 #' ## A binomial regression (percentage as dependent variable)
-#' exampleAB_score$Christiano %>%
-#'   transform(percentage = values/trials) %>%
-#'   set_dvar("percentage") %>%
+#' exampleAB_score$Christiano |>
+#'   transform(percentage = values/trials) |>
+#'   set_dvar("percentage") |>
 #'   plm(family = "binomial", var_trials = "trials", dvar_percentage = TRUE)
 #' @export
 plm <- function(data, dvar, pvar, mvar, 
@@ -109,16 +109,16 @@ plm <- function(data, dvar, pvar, mvar,
                 ...) {
   
   check_args(
-    at_most(length(data), 1, 
+    has_length(data, 1, 
                "plm can not be applied to more than one case (use hplm)."),
     not(family != "gaussian" && AR != 0, 
         "family is not 'gaussian' but AR is set."),
     not(family == "binomial" && is.null(var_trials),
         "family is 'binomial' but 'var_trials' is not defined."),
-    by_call(model, "plm"),
-    by_call(contrast_level, "plm"),
-    by_call(contrast_slope, "plm"),
-    by_call(contrast, "plm"),
+    by_call(model),
+    by_call(contrast_level),
+    by_call(contrast_slope),
+    by_call(contrast),
     at_least(AR, 0)
   )
   

@@ -1,3 +1,49 @@
+# scan 0.62.0
+
+## New functions / features
+
+- `rescale()`: New function as a helper for getting standardized estimators in regression models. e.g. `exampleAB |> rescale() |> hplm()`.
+- `between_smd()`: Calculates between case standardized mean differences as proposed by Pustejovsky et. aL (2014). Can take complex hplm models as a basis.
+- `design()`: Argument `random_start_values` randomly assigns start values for each case based on the distribution (`normal`, `poisson` or `binomial`) and the respective parameters (`start_values`, `s`, `n_trials`).
+- `print.sc_hplm()`: New argument `smd`. If set TRUE, between case smd results are reported.
+- `tau_u()`: New method `"tarlow"` calculates Tau-U as implemented in an R code and online calculator by Tarlow (2017). Here, tau values are calculated as in the `method = "complete", continuity_correction = TRUE, tau_method = "a"`. Inferential statistics are calculated based on tau b and the standard deviation for S is derived directly from Kendall's Tau B analysis (different from the `parker` and `complete` methods). 
+- `rand_test()`: It is now possible to provide new functions for calculating the statistic directly with a list to the `statistic_function` argument. This list must have an element named `statistic` with a function that takes two arguments `a` and `b` and returns a single numeric value. A second element of the list is named `aggregate` which takes a function with one numeric argument that returns a numeric argument. This function is used to aggregate the values of a multiple case design. If you do not provide this element, it uses the default `function(x) sum(x)/length(x)`. The third optional argument is `name` which provides a name for your user function.
+
+```r
+userstat <- list(
+  statistic = function(a, b) median(b) - median(a), 
+  aggregate = function(x) median(x),
+  name = "median B - A"
+)
+
+rand_test(exampleAB, statistic_function = userstat , complete = TRUE)
+
+# which is identical to:
+rand_test(exampleAB, statistic = "Median B-A" , complete = TRUE)
+```
+
+- `rand_test()`: Returns startpoints for the random permutations.
+- `plot_rand()`: New argument `type` when `"xy"` a plot with splitpoints and statistics is drawn. This allows to see graphically at which measurement time a statistic changes.
+
+```r
+Leidig2018[4] |> 
+  na.omit() |> 
+  rand_test(complete = TRUE, limit = 1, statistic = "SMD glass") |> 
+  plot_rand(type = "xy")
+```
+
+
+- `na.omit.scdf()`: scdf method for generic `na.omit()`. Removes any row with a missing value from an scdf.
+
+
+## Corrections / Changes 
+
+- `scdf()`: Throws an error when argument `phase_starts` is set and the beginning of the first phase is not the first measurement.
+- `tau_u()`: Method `"parker"` ignores the `tau_method` setting and sets `continuity_correction = FALSE`. This follows the Parker (2011) paper. There, the inferential statistics are calculated using Kendall's Tau b while the actual Tau calculation applies Kendall's Tau a (without ties).
+- `rand_test()`: Missing values in the dependent variable are now removed before calculations.
+
+## Solved bugs
+
 # scan 0.61.0
 
 ## Solved bugs
@@ -6,9 +52,9 @@
 
 ## New
 
-- Tip-of-the-day like message at startup.
-- Mulitple improvements of the Shiny app (try out with `shinyscan()`)
-- new output engine for rendering html export based on gtable. Set `options(scan.export.engine = "gt")`. This engine allows to export tables into docx format: `overlap(exampleAB) |> export(file = "test.docx", flip = TRUE)`.
+- Tip-of-the-day like message at start-up.
+- Multiple improvements of the Shiny app (try out with `shinyscan()`)
+- new output engine for rendering html export based on *gt table*. Set `options(scan.export.engine = "gt")`. This engine allows to export tables into docx format: `overlap(exampleAB) |> export(file = "test.docx", flip = TRUE)`.
 - new export functions for `pem()`, `pet()`, `pnd()`, and `summary()` (either `summary(exampleAB) |> export()` or `export(exampleAB, summary = TRUE)`)
 
 ## Changes
@@ -247,7 +293,7 @@ Toni:
 
 - scdf files now allow to combine studies with different phase designs.
 Several functions have been adapted to handle cases with differing designs in a mutual analysis.
-- The %>% operator has been imported and exported from the magrittr package. Now that R 4.1 has a
+- The `%>%` operator has been imported and exported from the magrittr package. Now that R 4.1 has a
 pipe operator, pipes seem to become the standard. For compatibility with older R Versions, we will stay with the `%>%` operator for some time before switching to `|>`.
 - To allow for a piping code, we added several functions: `add_l2, select_phases, select_cases, subset, set_vars, set_dvar, set_mvar, set_pvar`.
 

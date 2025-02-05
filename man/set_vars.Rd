@@ -29,8 +29,8 @@ format.}
 Set analysis variables in an scdf
 }
 \examples{
-exampleAB_add \%>\% 
-  set_dvar("depression") \%>\%
+exampleAB_add |>
+  set_dvar("depression") |>
   describe()
 }
 \seealso{
@@ -42,6 +42,7 @@ Other data manipulation functions:
 \code{\link{moving_median}()},
 \code{\link{outlier}()},
 \code{\link{ranks}()},
+\code{\link{rescale}()},
 \code{\link{scdf}()},
 \code{\link{select_cases}()},
 \code{\link{shift}()},

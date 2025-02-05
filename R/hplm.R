@@ -32,13 +32,17 @@
 #'   have a column named 'cases' with the names of the cases the Level 2
 #'   variables belong to.
 #' @param ... Further arguments passed to the lme function.
-#' @return \item{model}{List containing infromation about the applied model}
-#' \item{N}{Number of single-cases.} \item{formla}{A list containing the fixed
-#' and the random formulas of the hplm model.} \item{hplm}{Object of class lme
-#' contaning the multilevel model} \item{model.0}{Object of class lme containing
-#' the Zero Model.} \item{ICC}{List containing intraclass correlation and test
-#' parameters.} \item{model.without}{Object of class gls containing the fixed
-#' effect model.}
+#' @return 
+#'  |  |  |
+#'  | --- | --- |
+#'  | `model` | List containing infromation about the applied model. |
+#'  | `N` | Number of single-cases. |
+#'  | `formula` |A list containing the fixed and the random formulas of the hplm model. |
+#'  | `hplm` | Object of class lme contaning the multilevel model. |
+#'  | `model.0` | Object of class lme containing the Zero Model. |
+#'  | `ICC` | List containing intraclass correlation and test parameters. |
+#'  | `model.without` | Object of class gls containing the fixed effect model. |
+#'  | `contrast` | List with contrast definitions. |
 #' @author Juergen Wilbert
 #' @family regression functions
 #' @examples
@@ -47,8 +51,8 @@
 #' hplm(exampleAB_50, method = "REML", random.slopes = FALSE)
 #'
 #' ## Analyzing with additional L2 variables
-#' Leidig2018 %>%
-#'   add_l2(Leidig2018_l2) %>%
+#' Leidig2018 |>
+#'   add_l2(Leidig2018_l2) |>
 #'   hplm(update.fixed = .~. + gender + migration + ITRF_TOTAL*phaseB,
 #'        slope = FALSE, random.slopes = FALSE, lr.test = FALSE
 #'   )
@@ -78,9 +82,9 @@ hplm <- function(data, dvar, pvar, mvar,
                  ...) {
 
   check_args(
-    by_call(model, "hplm"),
-    by_call(method, "hplm"),
-    by_call(contrast, "hplm")
+    by_call(model),
+    by_call(method),
+    by_call(contrast)
   )
   model <- model[1]
   method <- method[1]
@@ -153,22 +157,23 @@ hplm <- function(data, dvar, pvar, mvar,
     ))
   }
   out$formula <- list(fixed = fixed, random = random)
-  
-# lme hplm model ----------------------------------------------------------
 
+# lme hplm model ----------------------------------------------------------
+  
   out$hplm <- lme(
-    fixed = fixed, 
-    random = random, 
-    data = dat, 
-    na.action = na.omit, 
-    method = method, 
-    control = control, 
-    keep.data = FALSE, 
+    fixed = fixed,
+    random = random,
+    data = dat,
+    na.action = na.omit,
+    method = method,
+    control = control,
+    keep.data = FALSE,
     ...
   )
   
   out$hplm$call$fixed <- fixed
-
+  out$hplm$call$random <- random
+  
 # LR tests ----------------------------------------------------------------
 
   if (lr.test) {
@@ -193,9 +198,10 @@ hplm <- function(data, dvar, pvar, mvar,
     
     # lme
     for(i in 1:length(random_ir)) {
+      
       out$random_ir$restricted[[i]] <- lme(
-        fixed = fixed, random = random_ir[i], data = dat, 
-        na.action = na.omit, method = method, control=control, 
+        fixed = fixed, random = random_ir[i], data = dat,
+        na.action = na.omit, method = method, control=control,
         keep.data = FALSE, ...)
       
       out$random_ir$restricted[[i]]$call$fixed <- fixed
@@ -213,7 +219,7 @@ hplm <- function(data, dvar, pvar, mvar,
     .formula.null <- as.formula(paste0(dvar, " ~ 1"))
     out$model.0 <- lme(
       .formula.null, random =~1|case, data = dat, 
-      method = method, na.action=na.omit, control = control
+      method = method, na.action = na.omit, control = control
     )
     out$model.0$call$fixed <- .formula.null
     

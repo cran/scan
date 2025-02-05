@@ -26,8 +26,11 @@ providing a list with two elements. E.g., \code{phases = list(A = c(1,3), B = c(
 is \code{phases = c(1,2)}.}
 }
 \value{
-\item{nap}{A data frame with NAP and additional values for each
-case.} \item{N}{Number of cases.}
+\tabular{ll}{
+    \tab  \cr
+   \code{nap} \tab A data frame with NAP and additional values for each case. \cr
+   \code{N} \tab Number of cases. \cr
+}
 }
 \description{
 The \code{\link[=nap]{nap()}} function calculates the nonoverlap of all pairs (NAP; Parker &
@@ -60,6 +63,7 @@ single-case research: Nonoverlap of all pairs. \emph{Behavior Therapy}, \emph{40
 \seealso{
 Other overlap functions: 
 \code{\link{cdc}()},
+\code{\link{ird}()},
 \code{\link{overlap}()},
 \code{\link{pand}()},
 \code{\link{pem}()},

@@ -97,7 +97,10 @@ export <- function (object, ...) {
 
 .add_footnote <- function(x, footnote) {
   if (length(footnote) > 1) {
-    footnote <- paste0(footnote, collapse = "; ") |> paste0(".")
+    footnote <- paste0(
+      footnote, 
+      collapse = getOption("scan.export.footnote.collapse")
+    ) |> paste0(".")
   }
   if (inherits(x, "kableExtra")) {
     footnote <- gsub("<br>", "\n", footnote)
@@ -117,7 +120,7 @@ export <- function (object, ...) {
                           ...) {
   
   if (getOption("scan.export.engine") == "gt") {
-    table <- export_table(
+    table <- export_table_gt(
       x, 
       title = caption, 
       footnote = footnote,
@@ -152,15 +155,15 @@ export <- function (object, ...) {
 
 ###### gt ####
 
-export_table <- function(x, 
-                         title = NULL, 
-                         footnote = NULL, 
-                         spanner = NULL,
-                         row_group = NULL,
-                         rownames = FALSE,
-                         cols_label = NULL,
-                         decimals = NULL,
-                         ...) {
+export_table_gt <- function(x, 
+                            title = NULL, 
+                            footnote = NULL, 
+                            spanner = NULL,
+                            row_group = NULL,
+                            rownames = FALSE,
+                            cols_label = NULL,
+                            decimals = NULL,
+                            ...) {
           
   
   while(TRUE) {
@@ -174,7 +177,11 @@ export_table <- function(x,
   if (!is.null(footnote) && 
       !identical(footnote, "") && 
       !identical(footnote, NA)) {
-    footnote <- paste0("*Note.* ", paste0(footnote, collapse = ". "), ".")
+    footnote <- paste0(
+      "*Note.* ", 
+      paste0(footnote, collapse = getOption("scan.export.footnote.collapse")), 
+      "."
+    )
   }
   
   if (!inherits(x, "data.frame")) {
