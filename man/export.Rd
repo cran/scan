@@ -3,7 +3,7 @@
 %   R/export.sc_nap.R, R/export.sc_overlap.R, R/export.sc_pem.R,
 %   R/export.sc_pet.R, R/export.sc_pnd.R, R/export.sc_power.R,
 %   R/export.sc_smd.R, R/export.sc_trend.R, R/export.scdf.R,
-%   R/export.scdf_summary.R, R/print-export-plm.R
+%   R/export.scdf_summary.R
 \name{export}
 \alias{export}
 \alias{export.sc_desc}
@@ -17,7 +17,6 @@
 \alias{export.sc_trend}
 \alias{export.scdf}
 \alias{export.scdf_summary}
-\alias{export.sc_plm}
 \title{Export scan objects to html or latex}
 \usage{
 export(object, ...)
@@ -27,8 +26,6 @@ export(object, ...)
   caption = NA,
   footnote = NA,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   flip = FALSE,
   round = 2,
   ...
@@ -39,8 +36,6 @@ export(object, ...)
   caption = NA,
   footnote = NA,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   select = c("Case", "NAP", "NAP Rescaled", "w", "p", "d", "R²"),
   round = 2,
   ...
@@ -51,58 +46,27 @@ export(object, ...)
   caption = NA,
   footnote = NULL,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   round = 2,
   decimals = 2,
   flip = FALSE,
   ...
 )
 
-\method{export}{sc_pem}(
-  object,
-  caption = NA,
-  footnote = NA,
-  filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
-  round = 2,
-  ...
-)
+\method{export}{sc_pem}(object, caption = NA, footnote = NA, filename = NA, round = 2, ...)
 
-\method{export}{sc_pet}(
-  object,
-  caption = NA,
-  footnote = NA,
-  filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
-  round = 1,
-  ...
-)
+\method{export}{sc_pet}(object, caption = NA, footnote = NA, filename = NA, round = 1, ...)
 
 \method{export}{sc_pnd}(
   object,
   caption = NA,
   footnote = NA,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   select = c("Case", "PND", "Total", "Exceeds"),
   round = 2,
   ...
 )
 
-\method{export}{sc_power}(
-  object,
-  caption = NA,
-  footnote = NA,
-  filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
-  round = 3,
-  ...
-)
+\method{export}{sc_power}(object, caption = NA, footnote = NA, filename = NA, round = 3, ...)
 
 \method{export}{sc_smd}(
   object,
@@ -112,8 +76,6 @@ export(object, ...)
   select = c("Case", `Mean A` = "mA", `Mean B` = "mB", `SD A` = "sdA", `SD B` = "sdB",
     `SD Cohen` = "sd cohen", `SD Hedges` = "sd hedges", "Glass' delta", "Hedges' g",
     "Hedges' g correction", "Hedges' g durlak correction", "Cohen's d"),
-  kable_styling_options = list(),
-  kable_options = list(),
   round = 2,
   decimals = 2,
   flip = FALSE,
@@ -125,8 +87,6 @@ export(object, ...)
   caption = NA,
   footnote = NA,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   round = 2,
   decimals = 2,
   ...
@@ -138,36 +98,12 @@ export(object, ...)
   caption = NA,
   footnote = NA,
   filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
   cols,
   round = 2,
   ...
 )
 
-\method{export}{scdf_summary}(
-  object,
-  caption = NA,
-  footnote = NA,
-  filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
-  round = 2,
-  ...
-)
-
-\method{export}{sc_plm}(
-  object,
-  caption = NA,
-  footnote = NA,
-  filename = NA,
-  kable_styling_options = list(),
-  kable_options = list(),
-  nice = TRUE,
-  ci = 0.95,
-  q = FALSE,
-  ...
-)
+\method{export}{scdf_summary}(object, caption = NA, footnote = NA, filename = NA, round = 2, ...)
 }
 \arguments{
 \item{object}{An scdf or an object exported from a scan function.}
@@ -182,11 +118,6 @@ footnote will be created based on the exported object.}
 
 \item{filename}{String containing the file name. If a filename is given the
 output will be written to that file.}
-
-\item{kable_styling_options}{list with arguments passed to the kable_styling
-function.}
-
-\item{kable_options}{list with arguments passed to the kable function.}
 
 \item{flip}{If TRUE, some objects are exported with rows and columns flipped.}
 
@@ -204,14 +135,6 @@ accordingly.}
 \item{cols}{Defines which columns are included when exporting an scdf. It is
 either a vector of variable names or the string "main" will select the
 central variables.}
-
-\item{nice}{If set TRUE (default) output values are rounded and optimized for
-publication tables.}
-
-\item{ci}{Print confidence intervals. Either FALSE, TRUE or a number
-between 0 and 1 (0.90 for a 90\% intervals).}
-
-\item{q}{Logical. If set \code{TRUE}, Yule's Q is reported.}
 }
 \value{
 Returns or displays a specially formatted html (or latex) file.

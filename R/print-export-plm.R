@@ -1,12 +1,24 @@
-#' @rdname print.sc
+#' @describeIn plm Print
+#' @order 2
+#' @inheritParams print.sc
 #' @param lag_max Maximum lag to be reported for autocorrelation of residuals.
 #'   Default is `3`. Set `FALSE` for no report of autocorrelations.
 #' @param ci Print confidence intervals. Either FALSE, TRUE or a number 
-#' between 0 and 1 (0.90 for a 90% intervals).
+#'   between 0 and 1 (0.90 for a 90% intervals).
 #' @param q Logical. If set `TRUE`, Yule's Q is reported.
+#' @param r_squared Either "delta", "partial", or "none".
+#' @examples
+#' ## Print
+#' plm(exampleAB$Johanna) |> 
+#'   print(ci = 0.9, r_squared = c("delta", "partial"))
 #' @export
 #' 
-print.sc_plm <- function(x, lag_max = 3, ci = 0.95, q = FALSE, ...) {
+print.sc_plm <- function(x, 
+                         lag_max = 3, 
+                         ci = 0.95, 
+                         q = FALSE, 
+                         r_squared = getOption("scan.rsquared"), 
+                         ...) {
   cat("Piecewise Regression Analysis\n\n")
   cat(
     "Contrast model: ", 
@@ -17,7 +29,10 @@ print.sc_plm <- function(x, lag_max = 3, ci = 0.95, q = FALSE, ...) {
   
   cat("Fitted a", x$family, "distribution.\n")		
   
-  results <- .output_plm(x, ci = ci, q = q, lag_max = lag_max, format = "print")
+  results <- .output_plm(
+    x, ci = ci, q = q, lag_max = lag_max, format = "print", 
+    r_squared = r_squared
+  )
   
   if (x$ar > 0) {
     cat(
@@ -40,26 +55,27 @@ print.sc_plm <- function(x, lag_max = 3, ci = 0.95, q = FALSE, ...) {
   cat("Formula:", results$formula, "\n")
 }
 
-#' @rdname export
-#' @param nice If set TRUE (default) output values are rounded and optimized for
-#' publication tables.
+#' @describeIn plm Export results as html table (see [export()])
+#' @order 3
+#' @inheritParams export
 #' @param ci Print confidence intervals. Either FALSE, TRUE or a number 
-#' between 0 and 1 (0.90 for a 90% intervals).
+#'   between 0 and 1 (0.90 for a 90% intervals).
 #' @param q Logical. If set `TRUE`, Yule's Q is reported.
+#' @param r_squared Either "delta", "partial", or "none".
+#' @examples
+#' ## Export
+#' plm(exampleAB$Johanna) |> export()
+#' 
 #' @export
 export.sc_plm <- function(object, 
                           caption = NA, 
                           footnote = NA, 
                           filename = NA,
-                          kable_styling_options = list(), 
-                          kable_options = list(), 
                           nice = TRUE,
                           ci = 0.95,
                           q = FALSE,
+                          r_squared = getOption("scan.rsquared"), 
                           ...) {
-  
-  kable_options <- .join_kabel(kable_options)
-  kable_styling_options <- .join_kabel_styling(kable_styling_options)
   
   if (is.na(caption)) {
     caption <- paste0(
@@ -67,7 +83,10 @@ export.sc_plm <- function(object,
     )
   }
   
-  results <- .output_plm(object, ci = ci, q = q, format = "export")
+  results <- .output_plm(
+    object, ci = ci, q = q, format = "export", 
+    r_squared = r_squared
+  )
   
   out <- results$table
   out <- rownames_to_first_column(out, "Parameter")
@@ -94,8 +113,6 @@ export.sc_plm <- function(object,
 
   table <- .create_table(
     out, 
-    kable_options, 
-    kable_styling_options, 
     caption = caption,
     footnote = footnote,
     spanner = spanner
@@ -121,13 +138,20 @@ export.sc_plm <- function(object,
   # finish ------------------------------------------------------------------
   
   if (!is.na(filename)) .save_export(table, filename)
-  table
   
+  table
 }
 
-.output_plm <- function(x, ci, q, lag_max = 0, format) {
+.output_plm <- function(x, 
+                        ci, q, 
+                        lag_max = 0, 
+                        format, 
+                        decimals = 3, 
+                        r_squared) {
   
   out <- list()
+  
+  report_r_squared <- if (is.null(x$r.squares)) FALSE else TRUE
   
   out$aic <- x$full.model$aic
   if (x$family == "poisson" || x$family == "binomial") {
@@ -151,24 +175,19 @@ export.sc_plm <- function(object,
   
   ## coef table ----
   
-  if (x$ar == 0) out$table <- summary(x$full.model)$coefficients
-  if (x$ar  > 0) out$table <- summary(x$full.model)$tTable
+  model_summary <- summary(x$full.model)
+  
+  if (x$ar == 0) out$table <- model_summary$coefficients
+  if (x$ar  > 0) out$table <- model_summary$tTable
   
   inter_incl <- if (attr(x$full.model$terms, "intercept")) TRUE else FALSE
   
-  out$table <- round(out$table, 3)
+  out$table <- round(out$table, decimals)
   out$table <- as.data.frame(out$table)
   names(out$table)[1:4] <- c("B", "SE", "t", "p")
   
+  
   if (identical(ci, FALSE)) {
-    
-    if (!is.null(x$r.squares)) {
-      out$table[["delta R\u00b2"]] <- c(
-        rep("", inter_incl), 
-        format(round(x$r.squares, 3))
-      )
-    }
-    
     if (x$family == "poisson" || x$family == "binomial") {
       OR <- exp(out$table[, "B"])
       out$table <- cbind(out$table[, c("B", "SE", "t", "p")],  "OR" = round(OR$table, 3))
@@ -204,11 +223,6 @@ export.sc_plm <- function(object,
     
     names(out$table) <- c("B", str_ci, "SE", "t", "p")
     
-    if (!is.null(x$r.squares)) {
-      x$r.squares <- x$r.squares[c(param_filter[-1])]
-      out$table[["delta R\u00b2"]] <- c(rep("", inter_incl), format(round(x$r.squares, 3)))
-    }
-    
     if (x$family == "poisson" || x$family == "binomial") {
       OR <- exp(out$table[, 1:3])
       out$table <- cbind(out$table[, 1:6], round(OR, 3))
@@ -222,9 +236,27 @@ export.sc_plm <- function(object,
       
     }
   } 
+  
+  ## r squared ----
+  
+  if ("delta" %in% r_squared && report_r_squared) {
+    x$r.squares <- x$r.squares[c(param_filter[-1])]
+    out$table[["delta R\u00b2"]] <- c(
+      rep("", inter_incl), format(round(x$r.squares, decimals))
+    )
+  }
+
+  if ("partial" %in% r_squared && report_r_squared) {
+    r_squared_partial <- out$table$t^2 /(out$table$t^2 + model_summary$df.residual)
+    if (inter_incl) r_squared_partial <- r_squared_partial[-1]
+    out$table[["partial R\u00b2"]] <- c(
+      rep("", inter_incl), format(round(r_squared_partial, decimals))
+    )
+  }
+
   rownames(out$table) <- rename_predictors(rownames(out$table), x)
   
-  ## autocorrelation
+  ## autocorrelation ----
   
   if (x$family == "gaussian" && lag_max > 0) {
     
@@ -236,14 +268,11 @@ export.sc_plm <- function(object,
     cr <- round(cr, 2)
     out$autocorrelation <- data.frame(lag = 1:lag_max, cr = cr)
     
-    #if (x$ar == 0) {
-      bj <- Box.test(residuals(x$full.model), lag_max, type = "Ljung-Box")
-      out$ljung <- sprintf(
-        "Ljung-Box test: X\u00b2(%d) = %.2f; p = %0.3f", 
-        bj$parameter, bj$statistic, bj$p.value
-      )
-    #}
-    
+    bj <- Box.test(residuals(x$full.model), lag_max, type = "Ljung-Box")
+    out$ljung <- sprintf(
+      "Ljung-Box test: X\u00b2(%d) = %.2f; p = %0.3f", 
+      bj$parameter, bj$statistic, bj$p.value
+    )
   }
   
   ## formula ----

@@ -1,22 +1,15 @@
 #' @describeIn hplm Export results as html table (see [export()])
 #' @order 3
 #' @inheritParams export
-#' @param nice If set TRUE (default) output values are rounded and optimized for
-#' publication tables.
 #' @export
 export.sc_hplm <- function(object, 
                            caption = NA, 
                            footnote = NA, 
                            filename = NA,
-                           kable_styling_options = list(), 
-                           kable_options = list(), 
                            round = 2,
                            nice = TRUE,
                            casewise = FALSE,
                            ...) {
-  
-  kable_options <- .join_kabel(kable_options)
-  kable_styling_options <- .join_kabel_styling(kable_styling_options)
   
   if (is.na(caption)) {
     caption <- paste0(
@@ -33,13 +26,7 @@ export.sc_hplm <- function(object,
   )
   
   if (casewise) {
-    out <- .export_casewise(
-      object, caption, footnote, filename ,
-      kable_styling_options, 
-      kable_options, 
-      round,
-      ...
-    )
+    out <- .export_casewise(object, caption, footnote, filename, round)
     return(out)
   }
   
@@ -98,8 +85,6 @@ export.sc_hplm <- function(object,
   
   table <- .create_table(
     out,
-    kable_options,
-    kable_styling_options,
     caption = caption,
     footnote = footnote,
     row_group = list(
@@ -124,19 +109,17 @@ export.sc_hplm <- function(object,
   
 }
 
-.export_casewise <- function(object, caption = NA, footnote = NA, filename = NA,
-                             kable_styling_options = list(), 
-                             kable_options = list(), 
-                             round = 2,
-                             ...) {
+.export_casewise <- function(object, 
+                             caption = NA, 
+                             footnote = NA, 
+                             filename = NA,
+                             round = 2) {
   
   out <- coef(object, casewise = TRUE)
   
   if (getOption("scan.export.engine") == "kable") {
     table <- .create_table(
       out,
-      kable_options,
-      kable_styling_options,
       caption = caption,
       footnote = footnote
     )
