@@ -81,16 +81,17 @@
 } 
 
 revise_names <- function(x, n) {
+  
   if (missing(n)) {
     n <- length(x)
     if (!is.character(x)) x <- names(x)
   }
 
   if (is.null(x)) {
-    x <- paste0("Case", 1:n)
+    x <- paste0("[case #", 1:n, "]") # paste0("Case", 1:n)
   } else {
-    nonames <- which(is.na(x))
-    x[nonames] <- paste0("Case", nonames)
+    nonames <- which(is.na(x) | x == "")
+    x[nonames] <- paste0("[case #", nonames, "]") # paste0("Case", nonames)
   }
   x
 }
@@ -128,7 +129,7 @@ number_word <- function(x) {
 
 round_numeric <- function(df, digits = 0) {
   id <- which(sapply(df, is.numeric))
-  df[, id] <- round(df[, id], digits)
+  if (length(id) > 0) df[, id] <- round(df[, id], digits)
   df
 }
 
@@ -165,3 +166,23 @@ format_table <- function(df,
   row.names(df_rounded) <- row.names(df)
   df_rounded
 }
+
+
+str_ci <- function(ci) paste0(c("LL", "UL"), "-CI", ci * 100, "%")
+
+str_contrasts <- function(method, contrasts) {
+  c(
+    paste0("Slope estimation method = ", method),
+    if (identical(contrasts[[1]], contrasts[[2]])) {
+      paste0("Contrasts for the level and slope effects are coded with the ", 
+           contrasts[1], " phase as the reference")
+    } else {
+      c(paste0("Contrasts for the level-effect are coded with the ", 
+               contrasts[1], " phase as the reference"),
+      paste0("Contrasts for the slope-effect are coded with the ", 
+             contrasts[2], " phase as the reference"))
+    }
+  )
+}
+
+

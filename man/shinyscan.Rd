@@ -4,10 +4,14 @@
 \alias{shinyscan}
 \title{A Shiny app for scan}
 \usage{
-shinyscan(quiet = TRUE, ...)
+shinyscan(scdf = NULL, quiet = TRUE, browser = c("external", "viewer"), ...)
 }
 \arguments{
+\item{scdf}{If you provide an \emph{scdf} here, it will be loaded at startup.}
+
 \item{quiet}{If TRUE (default) does not report shiny messages in the console.}
+
+\item{browser}{c("external","viewer")}
 
 \item{\dots}{Further arguments passed to the \code{shiny::runApp()} function.}
 }

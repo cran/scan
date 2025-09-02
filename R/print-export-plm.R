@@ -99,7 +99,8 @@ export.sc_plm <- function(object,
     paste0(results$fit), 
     paste0("AIC = ", round(results$aic)),
     "LL = lower limit",
-    "UL = upper limit"
+    "UL = upper limit",
+    str_contrasts(object$model, object$contrast)
   )
   
   if (getOption("scan.export.engine") == "gt") {
@@ -153,7 +154,8 @@ export.sc_plm <- function(object,
   
   out <- list()
   
-  report_r_squared <- if (is.null(x$r.squares)) FALSE else TRUE
+  report_r_squared <- if (is.null(x$r.squares) || identical(x$r.squares, NA)) 
+    FALSE else TRUE
   
   out$aic <- x$full.model$aic
   if (x$family == "poisson" || x$family == "binomial") {
@@ -206,7 +208,7 @@ export.sc_plm <- function(object,
     
     #str_ci <- paste0(round(c((1 - ci) / 2, ci + ((1 - ci) / 2)) * 100, 2), "%")
     
-    if (format == "print") str_ci <- paste0(c("LL", "UL"), "-CI", ci * 100, "%")
+    if (format == "print") str_ci <- str_ci(ci)
     if (format == "export") str_ci <- c("LL", "UL")
     
     ci <- suppressMessages(confint(x$full, level = ci))
