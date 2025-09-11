@@ -1,6 +1,8 @@
-#' @rdname print.sc
+#' @describeIn rand_test Print results
+#' @order 2
+#' @param x An object returned by [rand_test()]
 #' @export
-#' 
+#' @inheritParams print.sc
 print.sc_rand <- function(x, ...) {
   
   cat("Randomization Test\n\n")
@@ -67,6 +69,48 @@ print.sc_rand <- function(x, ...) {
   
   cat("\nProbabilty of observed statistic based on the assumption of normality:\n")
   cat(sprintf("z = %0.4f, p = %0.4f (single sided)\n", x$Z, x$p.Z.single))
+  
+}
+
+#' @describeIn rand_test Export html results
+#' @order 3
+#' @inheritParams export
+#' @export
+export.sc_rand <- function(object, 
+                          caption = NA, 
+                          footnote = NA, 
+                          filename = NA,
+                          ...) {
+  
+  if (is.na(caption)) {
+    caption <- paste0(
+      "Randomization Test for variable '", 
+      attr(object, opt("dv")),  "'"
+    )
+  }
+  
+  if (is.na(footnote)) {
+  }
+  
+  out <- capture.output(
+    print(object)
+  ) [-1:-2]
+  
+  out <- data.frame(
+    "Randomization test" = gt::html(paste(out, collapse = "  <br>")),
+    check.names = FALSE
+  )
+  table <- .create_table(
+    out,
+    caption = caption,
+    footnote = footnote,
+    fmt_markdown = TRUE,
+    ...
+  )
+  
+  if (!is.na(filename)) .save_export(table, filename)
+  
+  table
   
 }
 

@@ -69,11 +69,11 @@ res$choices$scplot_templates_annotate <- c(
   "Arrow" = 'add_arrow(case = 1, 2, 70, 6, 55, color = "darkred")'
 )  
 
-themes <- names(scplot:::.scplot_themes)
+res$scplot_themes <- names(scplot:::.scplot_themes)
 
-for(i in seq_along(themes)) {
-  res$choices$scplot_templates_design[[paste0("Theme ", themes[i])]] <-
-    paste0('set_theme("', themes[i], '")')
+for(i in seq_along(res$scplot_themes)) {
+  res$choices$scplot_templates_design[[paste0("Theme ", res$scplot_themes[i])]] <-
+    paste0('set_theme("', res$scplot_themes[i], '")')
 }
 
 res$choices$fn_stats <- c(
@@ -242,7 +242,17 @@ res$help_page <- structure(
 )
 
 ## ---- define themes (global scope) ----
-res$theme_light <- bs_theme(version = 5, bootswatch = "cerulean")
+
+theme <- getOption("scan.shiny.theme")
+if (!theme %in% bslib::bootswatch_themes()) {
+  message(
+    theme, " is not a valid theme. Use one of these: ", 
+    paste0(bslib::bootswatch_themes(), collapse = ", "))
+  theme <- "cerulean"
+}
+
+res$theme_light <- bs_theme(version = 5, bootswatch = theme)
+
 
 res$theme_dark <- res$theme_light |>
   bs_theme_update(
