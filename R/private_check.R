@@ -1,4 +1,14 @@
-
+#' Check function arguments
+#' 
+#' This function checks function arguments based on a set of predefined tests.
+#' It is intended for internal use within other functions to validate their
+#' arguments.
+#' #' @param ... A set of expressions defining the tests to be performed on the
+#' function arguments. Each expression should use one of the predefined test
+#' functions available within the scope of `check_args()`.
+#' @return This function does not return a value. If any of the tests fail,
+#' it raises an error with a descriptive message.
+#' @keywords internal
 check_args <- function(...) {
   
   if (!opt("check_arguments")) {
@@ -61,9 +71,16 @@ check_args <- function(...) {
     msg <- paste0("'", match, "'")
     if (length(match) == 2) msg <- paste0(msg, collapse = " or ")
     if (length(match) > 2) msg <- paste0("one of ", paste0(msg, collapse = ", "))
+    arg_name <- as.character(match.call()[2])
+    if (identical(arg, match)) {
+      caller_env <- parent.frame(n = 4)
+      caller_env[[arg_name]] <- arg[1]
+      return(list(pass = TRUE))
+    }
+  
     env$is_true(
       arg %in% match, 
-      "Argument ", as.character(match.call()[2]), " is not ", msg, "."
+      "Argument ", arg_name, " is not ", msg, "."
     )
   }
   

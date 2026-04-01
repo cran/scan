@@ -2,6 +2,10 @@
 #' 
 #' Adds dummy variables to an scdf for calculating piecewise linear models.
 #' 
+#' This function creates dummy variables for phase levels and phase slopes
+#' according to the specified piecewise regression model. It supports different
+#' contrast coding schemes for both level and slope contrasts.
+#' 
 #' @inheritParams .inheritParams
 #' @examples
 #' add_dummy_variables(
@@ -21,9 +25,6 @@ add_dummy_variables <- function(scdf,
     by_call(contrast_level),
     by_call(contrast_slope)
   )
-  model <- model[1]
-  contrast_level <- contrast_level[1]
-  contrast_slope <- contrast_slope[1]
   
   out <- .add_dummy_variables(
     data = scdf, 
